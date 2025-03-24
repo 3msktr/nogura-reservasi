@@ -42,6 +42,33 @@ export const getUserReservations = async (): Promise<Reservation[]> => {
   }
 };
 
+// New function to check if a user already has an active reservation for this event
+export const checkExistingReservation = async (eventId: string): Promise<boolean> => {
+  try {
+    const { data: user } = await supabase.auth.getUser();
+    
+    if (!user.user) {
+      toast.error("You must be logged in to make a reservation");
+      return false;
+    }
+
+    const { data, error } = await supabase
+      .from("reservations")
+      .select("id")
+      .eq("userid", user.user.id)
+      .eq("eventid", eventId)
+      .eq("status", "confirmed")
+      .maybeSingle();
+
+    if (error) throw error;
+    
+    return !!data; // Returns true if a reservation was found, false otherwise
+  } catch (error) {
+    console.error("Error checking existing reservation:", error);
+    return false;
+  }
+};
+
 export const createReservation = async (
   eventId: string,
   sessionId: string,
@@ -52,6 +79,13 @@ export const createReservation = async (
     
     if (!user.user) {
       toast.error("You must be logged in to make a reservation");
+      return false;
+    }
+
+    // Check if the user already has an active reservation for this event
+    const hasExistingReservation = await checkExistingReservation(eventId);
+    if (hasExistingReservation) {
+      toast.error("You already have a reservation for this event");
       return false;
     }
 
