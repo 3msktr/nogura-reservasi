@@ -48,3 +48,10 @@ export interface User {
   email: string;
   isAdmin: boolean;
 }
+
+export interface MessageTemplate {
+  id: string;
+  name: string;
+  content: string;
+  created_at: string;
+}

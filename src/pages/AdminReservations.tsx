@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Reservation } from '@/lib/types';
+import { Reservation, MessageTemplate } from '@/lib/types';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import {
@@ -37,12 +36,6 @@ interface ExtendedReservation extends Reservation {
   userName?: string;
 }
 
-interface MessageTemplate {
-  id: string;
-  name: string;
-  content: string;
-}
-
 const AdminReservations = () => {
   const [reservations, setReservations] = useState<ExtendedReservation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,7 +55,7 @@ const AdminReservations = () => {
     try {
       const { data, error } = await supabase
         .from('message_templates')
-        .select('id, name, content')
+        .select('*')
         .order('name');
 
       if (error) throw error;
@@ -86,14 +79,13 @@ const AdminReservations = () => {
 
       if (error) throw error;
 
-      // Map the data to match our expected structure
       const mappedReservations: ExtendedReservation[] = data.map(item => ({
         id: item.id,
         userId: item.userid,
         eventId: item.eventid,
         sessionId: item.sessionid,
         numberOfSeats: item.numberofseats,
-        status: item.status as "pending" | "confirmed" | "cancelled", // Explicitly cast to the union type
+        status: item.status as "pending" | "confirmed" | "cancelled",
         createdAt: item.created_at,
         event: item.event,
         session: item.session,
@@ -102,7 +94,6 @@ const AdminReservations = () => {
         allergyNotes: item.allergy_notes,
       }));
 
-      // Fetch user names
       await Promise.all(
         mappedReservations.map(async (reservation) => {
           try {
@@ -136,7 +127,6 @@ const AdminReservations = () => {
       const reservation = reservations.find(r => r.id === reservationId);
       if (!reservation) return;
 
-      // Update the reservation status
       const { error } = await supabase
         .from('reservations')
         .update({ status: newStatus })
@@ -144,20 +134,16 @@ const AdminReservations = () => {
 
       if (error) throw error;
 
-      // If we're cancelling a reservation, we need to free up the seats
       if (newStatus === 'cancelled' && reservation.status !== 'cancelled') {
-        // Free up the seats by using a negative value for p_seats_to_reduce
         const { error: updateError } = await supabase.rpc('update_available_seats', {
           p_session_id: reservation.sessionId,
-          p_seats_to_reduce: -reservation.numberOfSeats // negative to increase available seats
+          p_seats_to_reduce: -reservation.numberOfSeats
         });
 
         if (updateError) throw updateError;
       }
 
-      // If we're confirming a previously cancelled reservation, we need to take the seats
       if (newStatus === 'confirmed' && reservation.status === 'cancelled') {
-        // Take the seats by using a positive value for p_seats_to_reduce
         const { error: updateError } = await supabase.rpc('update_available_seats', {
           p_session_id: reservation.sessionId,
           p_seats_to_reduce: reservation.numberOfSeats
@@ -188,7 +174,6 @@ const AdminReservations = () => {
   const handleWhatsAppClick = (reservation: ExtendedReservation) => {
     setSelectedReservation(reservation);
     
-    // Generate the WhatsApp message from template or default
     const message = generateWhatsAppTemplate(reservation);
     
     setWhatsappMessage(message);
@@ -225,7 +210,6 @@ The Event Team`;
     const template = templates.find(t => t.id === templateId);
     if (!template) return;
     
-    // Replace placeholders with actual values
     const eventName = selectedReservation.event?.name || 'our event';
     const eventDate = selectedReservation.event?.date ? formatDate(selectedReservation.event.date) : 'the scheduled date';
     const sessionTime = selectedReservation.session?.time ? formatTime(selectedReservation.session.time) : 'the scheduled time';
@@ -248,7 +232,6 @@ The Event Team`;
       return;
     }
     
-    // Format the phone number (remove +62 if it exists, as we'll add it in the URL)
     let phoneNumber = selectedReservation.phoneNumber;
     if (phoneNumber.startsWith('+62')) {
       phoneNumber = phoneNumber.substring(3);
@@ -256,19 +239,14 @@ The Event Team`;
       phoneNumber = phoneNumber.substring(2);
     }
     
-    // Format the phone number for WhatsApp (include country code)
     const formattedPhone = `62${phoneNumber}`;
     
-    // Encode the message for a URL
     const encodedMessage = encodeURIComponent(whatsappMessage);
     
-    // Create the WhatsApp URL
     const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
     
-    // Open in a new tab
     window.open(whatsappUrl, '_blank');
     
-    // Close the dialog
     setShowWhatsAppDialog(false);
   };
 
@@ -399,7 +377,6 @@ The Event Team`;
         )}
       </div>
 
-      {/* WhatsApp Message Dialog */}
       <Dialog open={showWhatsAppDialog} onOpenChange={setShowWhatsAppDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>

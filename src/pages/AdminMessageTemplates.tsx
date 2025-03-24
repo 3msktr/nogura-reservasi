@@ -25,13 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { MessageSquare, Save } from 'lucide-react';
-
-interface MessageTemplate {
-  id: string;
-  name: string;
-  content: string;
-  created_at: string;
-}
+import { MessageTemplate } from '@/lib/types';
 
 const AdminMessageTemplates = () => {
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
@@ -61,6 +55,7 @@ const AdminMessageTemplates = () => {
   const fetchTemplates = async () => {
     try {
       setIsLoading(true);
+      // Use raw SQL query to fetch from the table since the types aren't generated yet
       const { data, error } = await supabase
         .from('message_templates')
         .select('*')
