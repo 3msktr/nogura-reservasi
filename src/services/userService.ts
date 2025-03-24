@@ -2,15 +2,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile } from '@/components/admin/UsersTable';
 
-// Define types for Supabase auth admin response
-export interface AdminUsersResponse {
-  users?: Array<{
-    id: string;
-    email?: string;
-  }>;
-  error?: Error;
-}
-
 export const fetchUsers = async (): Promise<UserProfile[]> => {
   try {
     // First, fetch all user profiles with their data
@@ -28,12 +19,13 @@ export const fetchUsers = async (): Promise<UserProfile[]> => {
     let userEmails: Record<string, string> = {};
     
     try {
-      const { data, error } = await supabase.auth.admin.listUsers();
+      // Using the admin API to fetch user emails if possible
+      const { data: adminData, error: adminError } = await supabase.auth.admin.listUsers();
       
-      if (!error && data?.users) {
+      if (!adminError && adminData && adminData.users) {
         // If admin API succeeded, map user IDs to emails
-        data.users.forEach(user => {
-          if (user.id && user.email) {
+        adminData.users.forEach(user => {
+          if (user.email) {
             userEmails[user.id] = user.email;
           }
         });
