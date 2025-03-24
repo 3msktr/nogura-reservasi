@@ -1,4 +1,3 @@
-
 export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('en-US', {
@@ -59,6 +58,14 @@ export const calculateTimeRemaining = (targetDate: string): {
 };
 
 export const isEventOpen = (openingTime: string, closingTime: string): boolean => {
+  const now = new Date();
+  const opening = new Date(openingTime);
+  const closing = new Date(closingTime);
+  
+  return now >= opening && now <= closing;
+};
+
+export const shouldEventBeOpen = (openingTime: string, closingTime: string): boolean => {
   const now = new Date();
   const opening = new Date(openingTime);
   const closing = new Date(closingTime);

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Calendar, Clock, Users } from 'lucide-react';
@@ -6,9 +5,8 @@ import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import CountdownTimer from '@/components/CountdownTimer';
 import { Event } from '@/lib/types';
-import { formatDate, formatTime, isEventOpen } from '@/utils/dateUtils';
+import { formatDate, formatTime, shouldEventBeOpen } from '@/utils/dateUtils';
 
-// Using the same mock data as other components
 const mockEvents: Event[] = [
   {
     id: "1",
@@ -77,7 +75,6 @@ const EventDetailPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
   useEffect(() => {
-    // Simulate API fetch
     setTimeout(() => {
       const foundEvent = mockEvents.find(e => e.id === eventId);
       setEvent(foundEvent || null);
@@ -111,9 +108,9 @@ const EventDetailPage: React.FC = () => {
     );
   }
   
-  const isOpen = isEventOpen(event.openingTime, event.closingTime);
-  const totalSeats = event.sessions.reduce((acc, session) => acc + session.totalSeats, 0);
-  const availableSeats = event.sessions.reduce((acc, session) => acc + session.availableSeats, 0);
+  const isOpen = event ? shouldEventBeOpen(event.openingTime, event.closingTime) : false;
+  const totalSeats = event?.sessions.reduce((acc, session) => acc + session.totalSeats, 0) || 0;
+  const availableSeats = event?.sessions.reduce((acc, session) => acc + session.availableSeats, 0) || 0;
   
   return (
     <Layout isLoggedIn={true}>

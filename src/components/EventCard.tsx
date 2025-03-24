@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { formatDate, formatTime, isEventOpen } from '@/utils/dateUtils';
+import { formatDate, formatTime, shouldEventBeOpen } from '@/utils/dateUtils';
 import { Event } from '@/lib/types';
 import CountdownTimer from './CountdownTimer';
 
@@ -12,7 +12,7 @@ interface EventCardProps {
 }
 
 const EventCard: React.FC<EventCardProps> = ({ event }) => {
-  const isOpen = isEventOpen(event.openingTime, event.closingTime);
+  const isOpen = shouldEventBeOpen(event.openingTime, event.closingTime);
   const totalSeats = event.sessions.reduce((acc, session) => acc + session.totalSeats, 0);
   const availableSeats = event.sessions.reduce((acc, session) => acc + session.availableSeats, 0);
   

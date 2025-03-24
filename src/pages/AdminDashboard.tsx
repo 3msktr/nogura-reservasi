@@ -1,12 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, Edit, Plus, Trash, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import { Event } from '@/lib/types';
-import { formatDate, formatTime } from '@/utils/dateUtils';
+import { formatDate, formatTime, shouldEventBeOpen } from '@/utils/dateUtils';
 
 // Mock events data
 const mockEvents: Event[] = [
@@ -75,6 +75,38 @@ const AdminDashboard: React.FC = () => {
   const [events, setEvents] = useState<Event[]>(mockEvents);
   const navigate = useNavigate();
   
+  // Check and update event status automatically
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setEvents(prevEvents => 
+        prevEvents.map(event => {
+          const shouldBeOpen = shouldEventBeOpen(event.openingTime, event.closingTime);
+          
+          if (event.isOpen !== shouldBeOpen) {
+            // Only toast if the status is changing
+            if (shouldBeOpen) {
+              toast.success(`Event "${event.name}" has automatically opened for reservations`);
+            } else {
+              toast.info(`Event "${event.name}" has automatically closed for reservations`);
+            }
+            return { ...event, isOpen: shouldBeOpen };
+          }
+          return event;
+        })
+      );
+    }, 60000); // Check every minute
+    
+    // Initial check when component mounts
+    setEvents(prevEvents => 
+      prevEvents.map(event => {
+        const shouldBeOpen = shouldEventBeOpen(event.openingTime, event.closingTime);
+        return { ...event, isOpen: shouldBeOpen };
+      })
+    );
+    
+    return () => clearInterval(intervalId);
+  }, []);
+  
   const toggleEventStatus = (eventId: string) => {
     setEvents(prev => 
       prev.map(event => {
@@ -121,70 +153,79 @@ const AdminDashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {events.map(event => (
-                  <tr key={event.id} className="border-b border-border hover:bg-secondary/30">
-                    <td className="p-4">
-                      <div className="font-medium">{event.name}</div>
-                      <div className="text-sm text-muted-foreground line-clamp-1">{event.description}</div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center text-sm">
-                        <Calendar size={14} className="mr-2" />
-                        {formatDate(event.date)}
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center text-sm">
-                        <Clock size={14} className="mr-2" />
-                        {event.sessions.length} sessions
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {event.sessions.map(session => formatTime(session.time)).join(', ')}
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center text-sm">
-                        <Users size={14} className="mr-2" />
-                        {event.sessions.reduce((acc, session) => acc + session.totalSeats, 0)} total seats
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        Max {event.maxReservationsPerUser} per user
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      {event.isOpen ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Open
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          Closed
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => toggleEventStatus(event.id)}
-                        >
-                          {event.isOpen ? 'Close Event' : 'Open Event'}
-                        </Button>
-                        <Button variant="ghost" size="icon">
-                          <Edit size={16} />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => deleteEvent(event.id)}
-                        >
-                          <Trash size={16} />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {events.map(event => {
+                  const autoManaged = shouldEventBeOpen(event.openingTime, event.closingTime) === event.isOpen;
+                  
+                  return (
+                    <tr key={event.id} className="border-b border-border hover:bg-secondary/30">
+                      <td className="p-4">
+                        <div className="font-medium">{event.name}</div>
+                        <div className="text-sm text-muted-foreground line-clamp-1">{event.description}</div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center text-sm">
+                          <Calendar size={14} className="mr-2" />
+                          {formatDate(event.date)}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center text-sm">
+                          <Clock size={14} className="mr-2" />
+                          {event.sessions.length} sessions
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {event.sessions.map(session => formatTime(session.time)).join(', ')}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center text-sm">
+                          <Users size={14} className="mr-2" />
+                          {event.sessions.reduce((acc, session) => acc + session.totalSeats, 0)} total seats
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Max {event.maxReservationsPerUser} per user
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        {event.isOpen ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Open
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            Closed
+                          </span>
+                        )}
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {autoManaged ? "Auto-managed" : "Manually set"}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => toggleEventStatus(event.id)}
+                            className={autoManaged ? "bg-secondary/50" : ""}
+                            title={autoManaged ? "This event is automatically managed based on its scheduled times" : "Override automatic status"}
+                          >
+                            {event.isOpen ? 'Close Event' : 'Open Event'}
+                          </Button>
+                          <Button variant="ghost" size="icon">
+                            <Edit size={16} />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => deleteEvent(event.id)}
+                          >
+                            <Trash size={16} />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
