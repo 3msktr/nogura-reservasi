@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -13,8 +14,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Eye, X, Check, Clock, Calendar, User } from 'lucide-react';
+import { Eye, X, Check, Clock, Calendar, User, MessageSquare } from 'lucide-react';
 import { formatDate, formatTime } from '@/utils/dateUtils';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ExtendedReservation extends Reservation {
   userName?: string;
@@ -23,6 +33,9 @@ interface ExtendedReservation extends Reservation {
 const AdminReservations = () => {
   const [reservations, setReservations] = useState<ExtendedReservation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showWhatsAppDialog, setShowWhatsAppDialog] = useState(false);
+  const [selectedReservation, setSelectedReservation] = useState<ExtendedReservation | null>(null);
+  const [whatsappMessage, setWhatsappMessage] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -142,6 +155,67 @@ const AdminReservations = () => {
     }
   };
 
+  const handleWhatsAppClick = (reservation: ExtendedReservation) => {
+    setSelectedReservation(reservation);
+    
+    // Generate the WhatsApp message template
+    const message = generateWhatsAppTemplate(reservation);
+    
+    setWhatsappMessage(message);
+    setShowWhatsAppDialog(true);
+  };
+
+  const generateWhatsAppTemplate = (reservation: ExtendedReservation): string => {
+    const eventName = reservation.event?.name || 'our event';
+    const eventDate = reservation.event?.date ? formatDate(reservation.event.date) : 'the scheduled date';
+    const sessionTime = reservation.session?.time ? formatTime(reservation.session.time) : 'the scheduled time';
+    const seats = reservation.numberOfSeats;
+    const guestName = reservation.contactName || 'Guest';
+
+    return `Hello ${guestName},
+
+Your reservation for *${eventName}* has been confirmed!
+
+🗓️ Date: ${eventDate}
+⏰ Time: ${sessionTime}
+👥 Seats: ${seats}
+
+Please arrive 15 minutes before your scheduled time. We look forward to seeing you!
+
+Best regards,
+The Event Team`;
+  };
+
+  const handleSendWhatsApp = () => {
+    if (!selectedReservation || !selectedReservation.phoneNumber) {
+      toast.error("No phone number available for this reservation");
+      return;
+    }
+    
+    // Format the phone number (remove +62 if it exists, as we'll add it in the URL)
+    let phoneNumber = selectedReservation.phoneNumber;
+    if (phoneNumber.startsWith('+62')) {
+      phoneNumber = phoneNumber.substring(3);
+    } else if (phoneNumber.startsWith('62')) {
+      phoneNumber = phoneNumber.substring(2);
+    }
+    
+    // Format the phone number for WhatsApp (include country code)
+    const formattedPhone = `62${phoneNumber}`;
+    
+    // Encode the message for a URL
+    const encodedMessage = encodeURIComponent(whatsappMessage);
+    
+    // Create the WhatsApp URL
+    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
+    
+    // Open in a new tab
+    window.open(whatsappUrl, '_blank');
+    
+    // Close the dialog
+    setShowWhatsAppDialog(false);
+  };
+
   return (
     <Layout>
       <div className="container py-20">
@@ -170,7 +244,7 @@ const AdminReservations = () => {
               <TableBody>
                 {reservations.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       No reservations found.
                     </TableCell>
                   </TableRow>
@@ -216,7 +290,7 @@ const AdminReservations = () => {
                           {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right space-x-2">
+                      <TableCell className="text-right space-x-1">
                         {reservation.status !== 'confirmed' && (
                           <Button
                             variant="ghost"
@@ -237,6 +311,16 @@ const AdminReservations = () => {
                             <X className="h-4 w-4 text-red-500" />
                           </Button>
                         )}
+                        {reservation.status === 'confirmed' && reservation.phoneNumber && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleWhatsAppClick(reservation)}
+                            title="Send WhatsApp Message"
+                          >
+                            <MessageSquare className="h-4 w-4 text-green-600" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -254,6 +338,36 @@ const AdminReservations = () => {
           </div>
         )}
       </div>
+
+      {/* WhatsApp Message Dialog */}
+      <Dialog open={showWhatsAppDialog} onOpenChange={setShowWhatsAppDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>WhatsApp Confirmation Message</DialogTitle>
+            <DialogDescription>
+              Customize the message below and click "Open in WhatsApp" to send it.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <Textarea 
+              value={whatsappMessage} 
+              onChange={(e) => setWhatsappMessage(e.target.value)}
+              className="min-h-[200px]"
+            />
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowWhatsAppDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSendWhatsApp} className="bg-green-600 hover:bg-green-700">
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Open in WhatsApp
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

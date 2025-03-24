@@ -27,7 +27,7 @@ export interface Reservation {
   numberOfSeats: number;
   status: "pending" | "confirmed" | "cancelled";
   createdAt: string;
-  // New fields for contact information
+  // Contact information fields
   contactName?: string;
   phoneNumber?: string;
   allergyNotes?: string;
