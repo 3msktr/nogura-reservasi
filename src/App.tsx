@@ -9,6 +9,9 @@ import Index from "./pages/Index";
 import BookingPage from "./pages/BookingPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
+import AdminEvents from "./pages/AdminEvents";
+import AdminSessions from "./pages/AdminSessions";
+import AdminReservations from "./pages/AdminReservations";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
@@ -40,6 +43,21 @@ const App = () => (
             <Route path="/admin/users" element={
               <AdminRoute>
                 <AdminUsers />
+              </AdminRoute>
+            } />
+            <Route path="/admin/events" element={
+              <AdminRoute>
+                <AdminEvents />
+              </AdminRoute>
+            } />
+            <Route path="/admin/events/:eventId/sessions" element={
+              <AdminRoute>
+                <AdminSessions />
+              </AdminRoute>
+            } />
+            <Route path="/admin/reservations" element={
+              <AdminRoute>
+                <AdminReservations />
               </AdminRoute>
             } />
             <Route path="/login" element={<Login />} />

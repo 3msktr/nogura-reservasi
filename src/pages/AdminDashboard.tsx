@@ -45,9 +45,11 @@ const AdminDashboard = () => {
               <CardDescription className="mb-4">
                 Create and manage events and sessions
               </CardDescription>
-              <Button className="w-full" variant="outline">
-                Manage Events
-              </Button>
+              <Link to="/admin/events">
+                <Button className="w-full">
+                  Manage Events
+                </Button>
+              </Link>
             </CardContent>
           </Card>
           
@@ -60,9 +62,11 @@ const AdminDashboard = () => {
               <CardDescription className="mb-4">
                 View and manage all user reservations
               </CardDescription>
-              <Button className="w-full" variant="outline">
-                View Reservations
-              </Button>
+              <Link to="/admin/reservations">
+                <Button className="w-full">
+                  View Reservations
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
