@@ -124,7 +124,7 @@ const BookingPage: React.FC = () => {
   const selectedSessionData = getSelectedSessionData();
   
   return (
-    <Layout isLoggedIn={true}>
+    <Layout>
       <div className="container py-12 md:py-20">
         <div className="max-w-4xl mx-auto">
           <div className="mb-10 animate-fade-in">

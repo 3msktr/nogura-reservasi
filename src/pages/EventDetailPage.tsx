@@ -113,7 +113,7 @@ const EventDetailPage: React.FC = () => {
   const availableSeats = event?.sessions.reduce((acc, session) => acc + session.availableSeats, 0) || 0;
   
   return (
-    <Layout isLoggedIn={true}>
+    <Layout>
       <div className="container py-12 md:py-20">
         <div className="max-w-4xl mx-auto">
           <Link 

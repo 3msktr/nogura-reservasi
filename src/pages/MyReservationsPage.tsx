@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, Users } from 'lucide-react';
@@ -68,7 +67,7 @@ const MyReservationsPage: React.FC = () => {
   };
 
   return (
-    <Layout isLoggedIn={true}>
+    <Layout>
       <div className="container py-12 md:py-20">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold mb-8">My Reservations</h1>
