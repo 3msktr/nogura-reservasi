@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import Layout from '@/components/Layout';
 import { toast } from 'sonner';
 import { UserCog } from 'lucide-react';
 import {
@@ -125,153 +124,149 @@ const AccountPage = () => {
 
   if (!user || !profile) {
     return (
-      <Layout>
-        <div className="container py-20 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4">Loading account information...</p>
-        </div>
-      </Layout>
+      <div className="container py-20 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
+        <p className="mt-4">Loading account information...</p>
+      </div>
     );
   }
 
   return (
-    <Layout>
-      <div className="container py-20">
-        <div className="max-w-2xl mx-auto">
-          <div className="flex items-center gap-4 mb-8">
-            <UserCog size={28} className="text-primary" />
-            <h1 className="text-2xl font-bold">Manage Account</h1>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarFallback className="text-lg">
-                    {profile.full_name?.charAt(0) || user.email?.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <CardTitle>{profile.full_name || 'User'}</CardTitle>
-                  <CardDescription>{user.email}</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="fullName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input {...field} disabled />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="border-t pt-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsPasswordUpdate(!isPasswordUpdate)}
-                      className="mb-4"
-                    >
-                      {isPasswordUpdate ? 'Cancel Password Change' : 'Change Password'}
-                    </Button>
-
-                    {isPasswordUpdate && (
-                      <div className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="currentPassword"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Current Password</FormLabel>
-                              <FormControl>
-                                <Input type="password" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="newPassword"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>New Password</FormLabel>
-                              <FormControl>
-                                <Input type="password" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="confirmPassword"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Confirm New Password</FormLabel>
-                              <FormControl>
-                                <Input type="password" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex justify-end space-x-2">
-                    <Button type="submit" disabled={isLoading}>
-                      {isLoading ? 'Updating...' : 'Save Changes'}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </CardContent>
-            <CardFooter className="flex flex-col items-start">
-              <div className="border-t w-full pt-4">
-                <p className="text-sm text-muted-foreground mb-4">
-                  Danger Zone
-                </p>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleDeleteAccount}
-                  disabled={isLoading}
-                >
-                  Delete Account
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
+    <div className="container py-20">
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center gap-4 mb-8">
+          <UserCog size={28} className="text-primary" />
+          <h1 className="text-2xl font-bold">Manage Account</h1>
         </div>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-4">
+              <Avatar className="h-16 w-16">
+                <AvatarFallback className="text-lg">
+                  {profile.full_name?.charAt(0) || user.email?.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <CardTitle>{profile.full_name || 'User'}</CardTitle>
+                <CardDescription>{user.email}</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input {...field} disabled />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="border-t pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsPasswordUpdate(!isPasswordUpdate)}
+                    className="mb-4"
+                  >
+                    {isPasswordUpdate ? 'Cancel Password Change' : 'Change Password'}
+                  </Button>
+
+                  {isPasswordUpdate && (
+                    <div className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="currentPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Current Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="newPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>New Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Confirm New Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex justify-end space-x-2">
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? 'Updating...' : 'Save Changes'}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </CardContent>
+          <CardFooter className="flex flex-col items-start">
+            <div className="border-t w-full pt-4">
+              <p className="text-sm text-muted-foreground mb-4">
+                Danger Zone
+              </p>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDeleteAccount}
+                disabled={isLoading}
+              >
+                Delete Account
+              </Button>
+            </div>
+          </CardFooter>
+        </Card>
       </div>
-    </Layout>
+    </div>
   );
 };
 
