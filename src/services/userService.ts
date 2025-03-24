@@ -24,48 +24,30 @@ export const fetchUsers = async (): Promise<UserProfile[]> => {
     // This will include email information
     const { data: { user: currentUser } } = await supabase.auth.getUser();
     
-    // Then, attempt to fetch all users from the auth API
-    // This might succeed if we have admin privileges
-    const { data: usersList, error: usersListError } = await supabase.auth.admin.listUsers();
-    
+    // Try to fetch all users from the auth API (this may fail due to permissions)
     let userEmails: Record<string, string> = {};
     
-    if (usersListError || !usersList?.users) {
-      console.warn('Using alternative method to get user emails due to admin API limitations');
+    try {
+      const { data, error } = await supabase.auth.admin.listUsers();
       
-      // If we can't get the list of all users, at least we can get the current user's email
-      if (currentUser) {
-        userEmails[currentUser.id] = currentUser.email || '';
-      }
-      
-      // For other users, attempt to get their emails from a public view if available
-      // Or fall back to placeholder emails
-      const { data: publicUserEmails, error: publicEmailsError } = await supabase
-        .from('public_user_emails')
-        .select('user_id, email');
-        
-      if (!publicEmailsError && publicUserEmails) {
-        publicUserEmails.forEach(item => {
-          userEmails[item.user_id] = item.email;
+      if (!error && data?.users) {
+        // If admin API succeeded, map user IDs to emails
+        data.users.forEach(user => {
+          if (user.id && user.email) {
+            userEmails[user.id] = user.email;
+          }
         });
       }
-      
-      // For any remaining users without emails, use placeholders
-      profiles.forEach(profile => {
-        if (!userEmails[profile.id]) {
-          userEmails[profile.id] = `user-${profile.id.substring(0, 8)}@example.com`;
-        }
-      });
-    } else {
-      // If admin API succeeded, map user IDs to emails
-      usersList.users.forEach(user => {
-        if (user.id && user.email) {
-          userEmails[user.id] = user.email;
-        }
-      });
+    } catch (adminError) {
+      console.warn('Admin API access failed:', adminError);
     }
     
-    // Combine profile data with email data
+    // If we couldn't get emails via admin API, at least add the current user's email
+    if (Object.keys(userEmails).length === 0 && currentUser) {
+      userEmails[currentUser.id] = currentUser.email || '';
+    }
+    
+    // Combine profile data with email data (using fallbacks where needed)
     return profiles.map(profile => ({
       id: profile.id,
       full_name: profile.full_name,
