@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Clock, Users } from 'lucide-react';
+import { Calendar, Clock, Minus, Plus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import { Event, Session } from '@/lib/types';
