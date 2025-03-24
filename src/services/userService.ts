@@ -73,10 +73,45 @@ export const fetchUsers = async (): Promise<UserProfile[]> => {
 };
 
 export const deleteUser = async (userId: string): Promise<void> => {
-  const { error } = await supabase
-    .from('profiles')
-    .delete()
-    .eq('id', userId);
+  try {
+    // First check if user exists before attempting to delete
+    const { data: profile, error: checkError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .single();
+    
+    if (checkError) {
+      console.error('Error checking user existence:', checkError);
+      throw new Error('User not found');
+    }
+    
+    // Delete the user's profile
+    const { error: deleteError } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
 
-  if (error) throw error;
+    if (deleteError) {
+      console.error('Error deleting user profile:', deleteError);
+      throw deleteError;
+    }
+    
+    // Attempt to delete the user from auth.users using RPC
+    // Note: This requires a custom function to be set up in Supabase
+    try {
+      const { error: authDeleteError } = await supabase.rpc('delete_user', { user_id: userId });
+      
+      if (authDeleteError) {
+        console.warn('Could not delete user from auth.users:', authDeleteError);
+        // We continue anyway since the profile was deleted
+      }
+    } catch (rpcError) {
+      console.warn('RPC delete_user not available or failed:', rpcError);
+      // We continue anyway since the profile was deleted
+    }
+  } catch (error) {
+    console.error('Error in deleteUser function:', error);
+    throw error;
+  }
 };

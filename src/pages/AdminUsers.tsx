@@ -26,6 +26,7 @@ const AdminUsers = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+  const [deleteUserName, setDeleteUserName] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   
@@ -152,6 +153,7 @@ const AdminUsers = () => {
       toast.success('User deleted successfully');
       setIsDeleteDialogOpen(false);
       setDeleteUserId(null);
+      setDeleteUserName(null);
     } catch (error: any) {
       console.error('Error deleting user:', error);
       toast.error(error.message || 'Failed to delete user');
@@ -161,7 +163,9 @@ const AdminUsers = () => {
   };
 
   const openDeleteDialog = (userId: string) => {
+    const user = users.find(u => u.id === userId);
     setDeleteUserId(userId);
+    setDeleteUserName(user?.full_name || user?.email || null);
     setIsDeleteDialogOpen(true);
   };
 
@@ -182,6 +186,7 @@ const AdminUsers = () => {
               onClose={() => setIsDeleteDialogOpen(false)}
               onDelete={handleDeleteUser}
               isDeleting={isDeletingUser}
+              userName={deleteUserName || undefined}
             />
           </div>
 
