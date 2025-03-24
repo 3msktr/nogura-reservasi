@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile } from '@/components/admin/UsersTable';
 
@@ -18,38 +19,46 @@ export const fetchUsers = async (): Promise<UserProfile[]> => {
       .select('id, full_name, phone_number, is_admin');
 
     if (profilesError) throw profilesError;
-
-    // Then, attempt to fetch all user emails from the auth.users table via Supabase admin API
-    // This will fail if not running in a Supabase Edge Function with admin rights
-    const { data: authData, error: authError } = await supabase.auth.admin.listUsers() as { 
-      data: AdminUsersResponse;
-      error: Error | null;
-    };
+    
+    // For authenticated users, we'll try to get their auth data
+    // This will include email information
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    
+    // Then, attempt to fetch all users from the auth API
+    // This might succeed if we have admin privileges
+    const { data: usersList, error: usersListError } = await supabase.auth.admin.listUsers();
     
     let userEmails: Record<string, string> = {};
     
-    if (authError || !authData?.users) {
-      console.warn('Unable to fetch actual user emails via admin API. Using alternative method.');
+    if (usersListError || !usersList?.users) {
+      console.warn('Using alternative method to get user emails due to admin API limitations');
       
-      // Alternative: Fetch email for the current authenticated user only
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        userEmails[user.id] = user.email || '';
+      // If we can't get the list of all users, at least we can get the current user's email
+      if (currentUser) {
+        userEmails[currentUser.id] = currentUser.email || '';
       }
       
-      // For other users, we'll try to get their profiles individually
-      const authUserPromises = profiles.map(async (profile) => {
-        // Skip if we already have this user's email (current user)
-        if (userEmails[profile.id]) return;
+      // For other users, attempt to get their emails from a public view if available
+      // Or fall back to placeholder emails
+      const { data: publicUserEmails, error: publicEmailsError } = await supabase
+        .from('public_user_emails')
+        .select('user_id, email');
         
-        // Fallback to placeholder emails if no real emails are available
-        userEmails[profile.id] = `user-${profile.id.substring(0, 8)}@example.com`;
-      });
+      if (!publicEmailsError && publicUserEmails) {
+        publicUserEmails.forEach(item => {
+          userEmails[item.user_id] = item.email;
+        });
+      }
       
-      await Promise.all(authUserPromises);
+      // For any remaining users without emails, use placeholders
+      profiles.forEach(profile => {
+        if (!userEmails[profile.id]) {
+          userEmails[profile.id] = `user-${profile.id.substring(0, 8)}@example.com`;
+        }
+      });
     } else {
       // If admin API succeeded, map user IDs to emails
-      authData.users.forEach((user) => {
+      usersList.users.forEach(user => {
         if (user.id && user.email) {
           userEmails[user.id] = user.email;
         }
