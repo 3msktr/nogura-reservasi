@@ -43,7 +43,7 @@ const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-4">
           {isLoggedIn ? (
             <div className="flex items-center gap-4">
-              <Link to="/account" className="p-2 rounded-full hover:bg-secondary transition-colors">
+              <Link to="/account" className="p-2 rounded-full hover:bg-secondary transition-colors" title="Manage Account">
                 <User size={18} />
               </Link>
               <Button 
@@ -51,6 +51,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 size="icon"
                 onClick={onLogout}
                 className="rounded-full"
+                title="Log Out"
               >
                 <LogOut size={18} />
               </Button>

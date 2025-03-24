@@ -14,6 +14,7 @@ import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
 import MyReservationsPage from "./pages/MyReservationsPage";
 import EventDetailPage from "./pages/EventDetailPage";
+import AccountPage from "./pages/AccountPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 
@@ -42,6 +43,11 @@ const App = () => (
             } />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/account" element={
+              <ProtectedRoute>
+                <AccountPage />
+              </ProtectedRoute>
+            } />
             <Route path="/my-reservations" element={
               <ProtectedRoute>
                 <MyReservationsPage />
