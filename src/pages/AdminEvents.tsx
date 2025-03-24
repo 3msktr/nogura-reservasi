@@ -1,33 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/components/ui/use-toast';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Event } from '@/lib/types';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Trash2, Edit, Plus, Calendar, LockOpen, Lock } from 'lucide-react';
-import { formatDate } from '@/utils/dateUtils';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+import { Plus } from 'lucide-react';
+import { formatTimeForDB } from '@/utils/dateUtils';
+import EventList from '@/components/admin/EventList';
+import EventFormDialog from '@/components/admin/EventFormDialog';
 
 const AdminEvents = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -35,9 +16,6 @@ const AdminEvents = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [currentEvent, setCurrentEvent] = useState<Partial<Event> | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  
-  const navigate = useNavigate();
-  const { toast: uiToast } = useToast();
 
   useEffect(() => {
     fetchEvents();
@@ -115,17 +93,6 @@ const AdminEvents = () => {
     }
   };
 
-  // Helper function to format time correctly for the database
-  const formatTimeForDB = (timeString: string): string => {
-    try {
-      const date = new Date(timeString);
-      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-    } catch (error) {
-      console.error('Error formatting time:', error);
-      return '12:00:00'; // Default to noon if there's an error
-    }
-  };
-
   const handleCreateOrUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
@@ -184,10 +151,6 @@ const AdminEvents = () => {
     }
   };
 
-  const handleViewSessions = (eventId: string) => {
-    navigate(`/admin/events/${eventId}/sessions`);
-  };
-
   const openNewEventDialog = () => {
     setCurrentEvent({
       name: '',
@@ -207,6 +170,12 @@ const AdminEvents = () => {
     setOpenDialog(true);
   };
 
+  const handleFieldChange = (field: string, value: any) => {
+    if (currentEvent) {
+      setCurrentEvent({ ...currentEvent, [field]: value });
+    }
+  };
+
   return (
     <Layout>
       <div className="container py-20">
@@ -217,171 +186,22 @@ const AdminEvents = () => {
           </Button>
         </div>
 
-        {isLoading ? (
-          <div className="flex justify-center p-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Sessions</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {events.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      No events found. Create your first event!
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  events.map((event) => (
-                    <TableRow key={event.id}>
-                      <TableCell className="font-medium">{event.name}</TableCell>
-                      <TableCell>{formatDate(event.date)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className={`px-2 py-1 rounded-full text-xs flex items-center ${event.isOpen ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                            {event.isOpen ? (
-                              <>
-                                <LockOpen className="h-3 w-3 mr-1" />
-                                <span>Open</span>
-                              </>
-                            ) : (
-                              <>
-                                <Lock className="h-3 w-3 mr-1" />
-                                <span>Closed</span>
-                              </>
-                            )}
-                          </span>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => toggleEventStatus(event)}
-                          >
-                            {event.isOpen ? 'Close' : 'Open'}
-                          </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => handleViewSessions(event.id)}
-                        >
-                          <Calendar className="h-4 w-4 mr-2" /> 
-                          Manage Sessions
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => openEditEventDialog(event)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleDelete(event.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+        <EventList 
+          events={events}
+          isLoading={isLoading}
+          onEdit={openEditEventDialog}
+          onDelete={handleDelete}
+          onToggleStatus={toggleEventStatus}
+        />
 
-        <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>{isEditing ? 'Edit Event' : 'Create New Event'}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreateOrUpdate}>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Name
-                  </Label>
-                  <Input
-                    id="name"
-                    value={currentEvent?.name || ''}
-                    onChange={(e) => setCurrentEvent({ ...currentEvent, name: e.target.value })}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="description" className="text-right">
-                    Description
-                  </Label>
-                  <Textarea
-                    id="description"
-                    value={currentEvent?.description || ''}
-                    onChange={(e) => setCurrentEvent({ ...currentEvent, description: e.target.value })}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="date" className="text-right">
-                    Date
-                  </Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={currentEvent?.date?.substring(0, 10) || ''}
-                    onChange={(e) => setCurrentEvent({ ...currentEvent, date: e.target.value })}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="isOpen" className="text-right">
-                    Status
-                  </Label>
-                  <div className="flex items-center space-x-2 col-span-3">
-                    <Switch
-                      id="isOpen"
-                      checked={currentEvent?.isOpen || false}
-                      onCheckedChange={(checked) => setCurrentEvent({ ...currentEvent, isOpen: checked })}
-                    />
-                    <Label htmlFor="isOpen" className="text-sm text-muted-foreground">
-                      {currentEvent?.isOpen ? 'Open for Reservations' : 'Closed for Reservations'}
-                    </Label>
-                  </div>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="maxReservations" className="text-right">
-                    Max Reservations
-                  </Label>
-                  <Input
-                    id="maxReservations"
-                    type="number"
-                    min="1"
-                    value={currentEvent?.maxReservationsPerUser || 4}
-                    onChange={(e) => setCurrentEvent({ ...currentEvent, maxReservationsPerUser: parseInt(e.target.value) })}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit">{isEditing ? 'Save Changes' : 'Create Event'}</Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <EventFormDialog
+          open={openDialog}
+          onOpenChange={setOpenDialog}
+          currentEvent={currentEvent}
+          isEditing={isEditing}
+          onSubmit={handleCreateOrUpdate}
+          onFieldChange={handleFieldChange}
+        />
       </div>
     </Layout>
   );
