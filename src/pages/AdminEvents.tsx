@@ -115,6 +115,17 @@ const AdminEvents = () => {
     }
   };
 
+  // Helper function to format time correctly for the database
+  const formatTimeForDB = (timeString: string): string => {
+    try {
+      const date = new Date(timeString);
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return '12:00:00'; // Default to noon if there's an error
+    }
+  };
+
   const handleCreateOrUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
@@ -128,16 +139,22 @@ const AdminEvents = () => {
         return;
       }
       
+      // Format the openingTime and closingTime properly for DB storage
+      const now = new Date();
+      const formattedOpeningTime = openingTime ? formatTimeForDB(openingTime) : formatTimeForDB(now.toISOString());
+      const formattedClosingTime = formatTimeForDB(now.toISOString());
+      
       const eventData = {
         name,
         description: description || '',
         date,
-        openingtime: openingTime || new Date().toISOString(),
-        // Add closingtime with default value (now)
-        closingtime: new Date().toISOString(),
+        openingtime: formattedOpeningTime,
+        closingtime: formattedClosingTime,
         isopen: isOpen !== undefined ? isOpen : false,
         maxreservationsperuser: maxReservationsPerUser || 4
       };
+      
+      console.log('Saving event with data:', eventData);
       
       if (isEditing && currentEvent.id) {
         // Update existing event

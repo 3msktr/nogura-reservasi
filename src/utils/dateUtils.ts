@@ -1,4 +1,3 @@
-
 export const formatDate = (dateString: string): string => {
   try {
     // Handle cases where the date might be invalid
@@ -33,39 +32,71 @@ export const formatTime = (timeString: string): string => {
       return "Time not available";
     }
     
-    // Check if timeString is in the format "HH:MM" 
-    if (!/^\d{1,2}:\d{2}$/.test(timeString)) {
-      // Try to handle ISO date format
-      try {
-        const date = new Date(timeString);
-        if (!isNaN(date.getTime())) {
-          return new Intl.DateTimeFormat('en-US', {
-            hour: 'numeric',
-            minute: 'numeric',
-            hour12: true
-          }).format(date);
-        }
-      } catch (error) {
-        console.error("Failed to parse time as date:", error);
-      }
+    // Check if timeString is in the format "HH:MM" or "HH:MM:SS"
+    if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(timeString)) {
+      // If it's already in a time format, parse it directly
+      const [hours, minutes] = timeString.split(':');
+      const date = new Date();
+      date.setHours(parseInt(hours, 10));
+      date.setMinutes(parseInt(minutes, 10));
       
-      console.error("Invalid time format:", timeString);
-      return "Invalid time format";
+      return new Intl.DateTimeFormat('en-US', {
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
+      }).format(date);
     }
     
-    const [hours, minutes] = timeString.split(':');
-    const date = new Date();
-    date.setHours(parseInt(hours, 10));
-    date.setMinutes(parseInt(minutes, 10));
+    // Try to handle ISO date format
+    try {
+      const date = new Date(timeString);
+      if (!isNaN(date.getTime())) {
+        return new Intl.DateTimeFormat('en-US', {
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true
+        }).format(date);
+      }
+    } catch (error) {
+      console.error("Failed to parse time as date:", error);
+    }
     
-    return new Intl.DateTimeFormat('en-US', {
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: true
-    }).format(date);
+    console.error("Invalid time format:", timeString);
+    return "Invalid time format";
   } catch (error) {
     console.error("Error formatting time:", error);
     return "Time error";
+  }
+};
+
+// Helper to convert any time format to HH:MM:SS for database storage
+export const formatTimeForDB = (timeString: string): string => {
+  try {
+    // If it's already in HH:MM:SS format, return it
+    if (/^\d{1,2}:\d{2}:\d{2}$/.test(timeString)) {
+      return timeString;
+    }
+    
+    // If it's in HH:MM format, add seconds
+    if (/^\d{1,2}:\d{2}$/.test(timeString)) {
+      return `${timeString}:00`;
+    }
+    
+    // Otherwise, try to parse as date and format
+    const date = new Date(timeString);
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit', 
+        hour12: false 
+      });
+    }
+    
+    throw new Error(`Could not format time: ${timeString}`);
+  } catch (error) {
+    console.error("Error formatting time for DB:", error);
+    return "12:00:00"; // Default fallback time
   }
 };
 
