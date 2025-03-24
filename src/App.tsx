@@ -10,6 +10,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import MyReservationsPage from "./pages/MyReservationsPage";
+import EventDetailPage from "./pages/EventDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/booking/:eventId" element={<BookingPage />} />
+          <Route path="/event/:eventId" element={<EventDetailPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/my-reservations" element={<MyReservationsPage />} />
