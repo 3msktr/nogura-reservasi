@@ -55,19 +55,32 @@ const AdminMessageTemplates = () => {
   const fetchTemplates = async () => {
     try {
       setIsLoading(true);
-      // Use raw SQL query to fetch from the table since the types aren't generated yet
+      // Fetch templates from the Supabase table
       const { data, error } = await supabase
         .from('message_templates')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
-      setTemplates(data || []);
+      console.log('Templates fetched:', data);
+      
+      // Map the data to match our MessageTemplate type
+      const formattedTemplates: MessageTemplate[] = (data || []).map(template => ({
+        id: template.id,
+        name: template.name,
+        content: template.content,
+        created_at: template.created_at
+      }));
+
+      setTemplates(formattedTemplates);
       
       // Set the first template as current if available
-      if (data && data.length > 0) {
-        setCurrentTemplate(data[0]);
+      if (formattedTemplates.length > 0) {
+        setCurrentTemplate(formattedTemplates[0]);
       }
     } catch (error) {
       console.error('Error fetching templates:', error);

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -59,7 +60,15 @@ const AdminReservations = () => {
         .order('name');
 
       if (error) throw error;
-      setTemplates(data || []);
+      
+      const formattedTemplates: MessageTemplate[] = (data || []).map(template => ({
+        id: template.id,
+        name: template.name,
+        content: template.content,
+        created_at: template.created_at
+      }));
+      
+      setTemplates(formattedTemplates);
     } catch (error) {
       console.error('Error fetching templates:', error);
     }
