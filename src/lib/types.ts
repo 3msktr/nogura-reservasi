@@ -27,6 +27,15 @@ export interface Reservation {
   numberOfSeats: number;
   status: "pending" | "confirmed" | "cancelled";
   createdAt: string;
+  // Optional fields for display purposes
+  event?: {
+    id: string;
+    name: string;
+    date: string;
+  };
+  session?: {
+    time: string;
+  };
 }
 
 export interface User {
