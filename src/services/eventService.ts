@@ -18,19 +18,36 @@ export const getEvents = async (): Promise<Event[]> => {
         const { data: sessions, error: sessionsError } = await supabase
           .from("sessions")
           .select("*")
-          .eq("eventId", event.id)
+          .eq("eventid", event.id)
           .order("time", { ascending: true });
 
         if (sessionsError) throw sessionsError;
 
         return {
           ...event,
-          sessions: sessions as Session[]
+          sessions: sessions.map(session => ({
+            id: session.id,
+            time: session.time,
+            availableSeats: session.availableseats,
+            totalSeats: session.totalseats,
+            eventId: session.eventid
+          })) as Session[]
         };
       })
     );
 
-    return eventsWithSessions as Event[];
+    // Map database column names to our interface properties
+    return eventsWithSessions.map(event => ({
+      id: event.id,
+      name: event.name,
+      description: event.description,
+      date: event.date,
+      isOpen: event.isopen,
+      openingTime: event.openingtime,
+      closingTime: event.closingtime,
+      maxReservationsPerUser: event.maxreservationsperuser,
+      sessions: event.sessions
+    })) as Event[];
   } catch (error) {
     console.error("Error fetching events:", error);
     toast.error("Failed to load events");
@@ -51,14 +68,28 @@ export const getEventById = async (eventId: string): Promise<Event | null> => {
     const { data: sessions, error: sessionsError } = await supabase
       .from("sessions")
       .select("*")
-      .eq("eventId", eventId)
+      .eq("eventid", eventId)
       .order("time", { ascending: true });
 
     if (sessionsError) throw sessionsError;
 
+    // Map database column names to our interface properties
     return {
-      ...event,
-      sessions: sessions as Session[]
+      id: event.id,
+      name: event.name,
+      description: event.description,
+      date: event.date,
+      isOpen: event.isopen,
+      openingTime: event.openingtime,
+      closingTime: event.closingtime,
+      maxReservationsPerUser: event.maxreservationsperuser,
+      sessions: sessions.map(session => ({
+        id: session.id,
+        time: session.time,
+        availableSeats: session.availableseats,
+        totalSeats: session.totalseats,
+        eventId: session.eventid
+      })) as Session[]
     } as Event;
   } catch (error) {
     console.error("Error fetching event details:", error);
