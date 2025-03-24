@@ -87,11 +87,14 @@ export const calculateTimeRemaining = (targetDate: string): {
     if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(targetDate)) {
       console.log("Time-only format detected, converting to full date");
       const now = new Date();
-      const [hours, minutes, seconds = '00'] = targetDate.split(':').map(Number);
+      const timeComponents = targetDate.split(':').map(Number);
+      const hoursValue = timeComponents[0];
+      const minutesValue = timeComponents[1];
+      const secondsValue = timeComponents[2] || 0;
       
       // Create a date for today with the specified time
       const target = new Date(now);
-      target.setHours(hours, minutes, parseInt(seconds));
+      target.setHours(hoursValue, minutesValue, secondsValue);
       
       // If this time has already passed today, set it for tomorrow
       if (target <= now) {
@@ -100,16 +103,16 @@ export const calculateTimeRemaining = (targetDate: string): {
       
       const difference = target.getTime() - now.getTime();
       
-      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+      const daysValue = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hoursResult = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutesResult = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const secondsResult = Math.floor((difference % (1000 * 60)) / 1000);
       
       return {
-        days,
-        hours,
-        minutes,
-        seconds,
+        days: daysValue,
+        hours: hoursResult,
+        minutes: minutesResult,
+        seconds: secondsResult,
         total: difference
       };
     }
@@ -136,16 +139,16 @@ export const calculateTimeRemaining = (targetDate: string): {
       };
     }
     
-    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+    const daysValue = Math.floor(difference / (1000 * 60 * 60 * 24));
+    const hoursResult = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutesResult = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+    const secondsResult = Math.floor((difference % (1000 * 60)) / 1000);
     
     return {
-      days,
-      hours,
-      minutes,
-      seconds,
+      days: daysValue,
+      hours: hoursResult,
+      minutes: minutesResult,
+      seconds: secondsResult,
       total: difference
     };
   } catch (error) {
