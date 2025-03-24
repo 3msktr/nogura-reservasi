@@ -1,5 +1,6 @@
 
 import React from 'react';
+import Layout from '@/components/Layout';
 import EventCard from '@/components/EventCard';
 import { useEvents } from '@/hooks/useEvents';
 
@@ -7,7 +8,7 @@ const Index: React.FC = () => {
   const { events, isLoading } = useEvents();
 
   return (
-    <>
+    <Layout>
       <section className="relative py-20 px-4 md:py-32 overflow-hidden">
         <div className="container max-w-7xl mx-auto">
           <div className="text-center mb-16 animate-fade-in">
@@ -65,7 +66,7 @@ const Index: React.FC = () => {
           </div>
         </div>
       </section>
-    </>
+    </Layout>
   );
 };
 
