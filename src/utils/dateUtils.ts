@@ -69,121 +69,13 @@ export const formatTime = (timeString: string): string => {
   }
 };
 
-export const calculateTimeRemaining = (targetDate: string): {
-  days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-  total: number;
-} => {
-  try {
-    // Handle invalid input
-    if (!targetDate || targetDate === "null" || targetDate === "undefined") {
-      console.error("Invalid target date provided to calculateTimeRemaining");
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 };
-    }
-    
-    // If targetDate is just a time (e.g., "09:00:00"), construct a full date
-    if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(targetDate)) {
-      console.log("Time-only format detected, converting to full date");
-      const now = new Date();
-      const timeComponents = targetDate.split(':').map(Number);
-      const hoursValue = timeComponents[0];
-      const minutesValue = timeComponents[1];
-      const secondsValue = timeComponents[2] || 0;
-      
-      // Create a date for today with the specified time
-      const target = new Date(now);
-      target.setHours(hoursValue, minutesValue, secondsValue);
-      
-      // If this time has already passed today, set it for tomorrow
-      if (target <= now) {
-        target.setDate(target.getDate() + 1);
-      }
-      
-      const difference = target.getTime() - now.getTime();
-      
-      const daysValue = Math.floor(difference / (1000 * 60 * 60 * 24));
-      const hoursResult = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutesResult = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-      const secondsResult = Math.floor((difference % (1000 * 60)) / 1000);
-      
-      return {
-        days: daysValue,
-        hours: hoursResult,
-        minutes: minutesResult,
-        seconds: secondsResult,
-        total: difference
-      };
-    }
-    
-    const target = new Date(targetDate).getTime();
-    
-    // Check if target date is valid
-    if (isNaN(target)) {
-      console.error("Invalid target date in calculateTimeRemaining:", targetDate);
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 };
-    }
-    
-    const now = new Date().getTime();
-    const difference = target - now;
-    
-    // Return all zeros if the target date is in the past
-    if (difference <= 0) {
-      return {
-        days: 0,
-        hours: 0,
-        minutes: 0,
-        seconds: 0,
-        total: 0
-      };
-    }
-    
-    const daysValue = Math.floor(difference / (1000 * 60 * 60 * 24));
-    const hoursResult = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutesResult = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-    const secondsResult = Math.floor((difference % (1000 * 60)) / 1000);
-    
-    return {
-      days: daysValue,
-      hours: hoursResult,
-      minutes: minutesResult,
-      seconds: secondsResult,
-      total: difference
-    };
-  } catch (error) {
-    console.error("Error calculating time remaining:", error);
-    return { days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 };
-  }
+// Simplified isEventOpen and shouldEventBeOpen to just rely on the isOpen flag from the database
+export const isEventOpen = (event: { isOpen: boolean }): boolean => {
+  return event.isOpen;
 };
 
-// Update isEventOpen to only depend on openingTime
-export const isEventOpen = (openingTime: string): boolean => {
-  try {
-    // Handle invalid input
-    if (!openingTime) {
-      return false;
-    }
-    
-    const now = new Date();
-    const opening = new Date(openingTime);
-    
-    // Check if date is valid
-    if (isNaN(opening.getTime())) {
-      console.error("Invalid date in isEventOpen:", { openingTime });
-      return false;
-    }
-    
-    return now >= opening;
-  } catch (error) {
-    console.error("Error in isEventOpen:", error);
-    return false;
-  }
-};
-
-// Update shouldEventBeOpen to only depend on openingTime
-export const shouldEventBeOpen = (openingTime: string): boolean => {
-  return isEventOpen(openingTime);
+export const shouldEventBeOpen = (event: { isOpen: boolean }): boolean => {
+  return isEventOpen(event);
 };
 
 // Enhanced date validation

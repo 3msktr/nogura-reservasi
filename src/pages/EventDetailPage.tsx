@@ -1,12 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Calendar, Clock, Users } from 'lucide-react';
+import { Calendar, Clock, Users, Lock, LockOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
-import CountdownTimer from '@/components/CountdownTimer';
 import { Event } from '@/lib/types';
-import { formatDate, formatTime, isValidDate } from '@/utils/dateUtils';
+import { formatDate, formatTime } from '@/utils/dateUtils';
 import { getEventById } from '@/services/eventService';
 import { toast } from 'sonner';
 
@@ -14,7 +13,6 @@ const EventDetailPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const [event, setEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isOpen, setIsOpen] = useState<boolean>(false);
   
   useEffect(() => {
     const fetchEvent = async () => {
@@ -39,24 +37,6 @@ const EventDetailPage: React.FC = () => {
         
         console.log('Event data received:', data);
         setEvent(data);
-        
-        // Validate opening time
-        const openingValid = isValidDate(data.openingTime);
-        
-        if (!openingValid) {
-          console.error('Invalid date value in event:', { 
-            openingTime: data.openingTime, 
-            openingValid
-          });
-          toast.error('There was an issue with the event dates. Please contact support.');
-        }
-        
-        // Calculate if the event is open based on if current time is past opening time
-        const now = new Date();
-        const openingTime = new Date(data.openingTime);
-        const open = openingValid && now >= openingTime;
-        console.log('Event open status:', open, 'Current time:', now, 'Opening time:', openingTime);
-        setIsOpen(open);
       } catch (error) {
         console.error('Error fetching event:', error);
         toast.error('Failed to load event details');
@@ -67,12 +47,6 @@ const EventDetailPage: React.FC = () => {
     
     fetchEvent();
   }, [eventId]);
-  
-  const handleCountdownComplete = () => {
-    console.log('Countdown completed, updating isOpen state');
-    setIsOpen(true);
-    toast.success("Reservations are now open!");
-  };
   
   if (isLoading) {
     return (
@@ -103,11 +77,6 @@ const EventDetailPage: React.FC = () => {
   const totalSeats = event.sessions.reduce((acc, session) => acc + session.totalSeats, 0) || 0;
   const availableSeats = event.sessions.reduce((acc, session) => acc + session.availableSeats, 0) || 0;
   
-  // Log to debug countdown timer issues
-  console.log('Event detail render - opening time:', event.openingTime);
-  console.log('Is valid opening date:', isValidDate(event.openingTime));
-  console.log('Current isOpen state:', isOpen);
-  
   return (
     <Layout>
       <div className="container py-12 md:py-20">
@@ -121,7 +90,23 @@ const EventDetailPage: React.FC = () => {
           
           <div className="bg-white rounded-xl shadow-subtle border border-border overflow-hidden">
             <div className="p-6 md:p-8">
-              <h1 className="text-3xl font-bold mb-4">{event.name}</h1>
+              <div className="flex justify-between items-start mb-4">
+                <h1 className="text-3xl font-bold">{event.name}</h1>
+                <div className={`px-3 py-1 rounded-full text-sm flex items-center ${event.isOpen ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  {event.isOpen ? (
+                    <>
+                      <LockOpen className="h-4 w-4 mr-1" />
+                      <span>Open for Booking</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-4 w-4 mr-1" />
+                      <span>Closed for Booking</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              
               <p className="text-muted-foreground mb-6">{event.description}</p>
               
               <div className="flex flex-wrap gap-4 mb-8">
@@ -153,7 +138,7 @@ const EventDetailPage: React.FC = () => {
                 </div>
               </div>
               
-              {isOpen ? (
+              {event.isOpen ? (
                 <div className="mt-8">
                   <Link to={`/booking/${event.id}`}>
                     <Button size="lg">Proceed to Booking</Button>
@@ -161,21 +146,9 @@ const EventDetailPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="mt-8 bg-secondary rounded-xl p-6">
-                  <h3 className="text-lg font-medium mb-4 text-center">Reservations opening soon</h3>
-                  <div className="mb-6">
-                    {isValidDate(event.openingTime) ? (
-                      <CountdownTimer 
-                        targetDate={event.openingTime} 
-                        onComplete={handleCountdownComplete}
-                      />
-                    ) : (
-                      <div className="text-center text-sm text-muted-foreground">
-                        Opening time information is unavailable.
-                      </div>
-                    )}
-                  </div>
+                  <h3 className="text-lg font-medium mb-4 text-center">Reservations Unavailable</h3>
                   <p className="text-sm text-muted-foreground text-center">
-                    Reservations for this event will open on {formatDate(event.openingTime)} at {formatTime(event.openingTime)}
+                    This event is currently not open for reservations.
                   </p>
                 </div>
               )}

@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Trash2, Edit, Plus, Calendar } from 'lucide-react';
+import { Trash2, Edit, Plus, Calendar, LockOpen, Lock } from 'lucide-react';
 import { formatDate } from '@/utils/dateUtils';
 import {
   Dialog,
@@ -27,6 +27,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 
 const AdminEvents = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -97,15 +98,32 @@ const AdminEvents = () => {
     }
   };
 
+  const toggleEventStatus = async (event: Event) => {
+    try {
+      const { error } = await supabase
+        .from('events')
+        .update({ isopen: !event.isOpen })
+        .eq('id', event.id);
+
+      if (error) throw error;
+
+      toast.success(`Event ${!event.isOpen ? 'opened' : 'closed'} for reservations`);
+      fetchEvents();
+    } catch (error) {
+      console.error('Error toggling event status:', error);
+      toast.error('Failed to update event status');
+    }
+  };
+
   const handleCreateOrUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (!currentEvent) return;
     
     try {
-      const { name, description, date, openingTime, closingTime, maxReservationsPerUser } = currentEvent;
+      const { name, description, date, openingTime, isOpen, maxReservationsPerUser } = currentEvent;
       
-      if (!name || !date || !openingTime || !closingTime) {
+      if (!name || !date) {
         toast.error('Please fill in all required fields');
         return;
       }
@@ -114,10 +132,9 @@ const AdminEvents = () => {
         name,
         description: description || '',
         date,
-        openingtime: openingTime,
-        closingtime: closingTime,
-        maxreservationsperuser: maxReservationsPerUser || 4,
-        isopen: true
+        openingtime: openingTime || new Date().toISOString(),
+        isopen: isOpen !== undefined ? isOpen : false,
+        maxreservationsperuser: maxReservationsPerUser || 4
       };
       
       if (isEditing && currentEvent.id) {
@@ -157,10 +174,9 @@ const AdminEvents = () => {
       name: '',
       description: '',
       date: new Date().toISOString().split('T')[0],
-      openingTime: '08:00:00',
-      closingTime: '18:00:00',
-      maxReservationsPerUser: 4,
-      isOpen: true
+      openingTime: new Date().toISOString(),
+      isOpen: false,
+      maxReservationsPerUser: 4
     });
     setIsEditing(false);
     setOpenDialog(true);
@@ -211,9 +227,28 @@ const AdminEvents = () => {
                       <TableCell className="font-medium">{event.name}</TableCell>
                       <TableCell>{formatDate(event.date)}</TableCell>
                       <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs ${event.isOpen ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                          {event.isOpen ? 'Open' : 'Closed'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 rounded-full text-xs flex items-center ${event.isOpen ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            {event.isOpen ? (
+                              <>
+                                <LockOpen className="h-3 w-3 mr-1" />
+                                <span>Open</span>
+                              </>
+                            ) : (
+                              <>
+                                <Lock className="h-3 w-3 mr-1" />
+                                <span>Closed</span>
+                              </>
+                            )}
+                          </span>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => toggleEventStatus(event)}
+                          >
+                            {event.isOpen ? 'Close' : 'Open'}
+                          </Button>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Button 
@@ -286,37 +321,26 @@ const AdminEvents = () => {
                   <Input
                     id="date"
                     type="date"
-                    value={currentEvent?.date || ''}
+                    value={currentEvent?.date?.substring(0, 10) || ''}
                     onChange={(e) => setCurrentEvent({ ...currentEvent, date: e.target.value })}
                     className="col-span-3"
                     required
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="openingTime" className="text-right">
-                    Opening Time
+                  <Label htmlFor="isOpen" className="text-right">
+                    Status
                   </Label>
-                  <Input
-                    id="openingTime"
-                    type="time"
-                    value={currentEvent?.openingTime || ''}
-                    onChange={(e) => setCurrentEvent({ ...currentEvent, openingTime: e.target.value })}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="closingTime" className="text-right">
-                    Closing Time
-                  </Label>
-                  <Input
-                    id="closingTime"
-                    type="time"
-                    value={currentEvent?.closingTime || ''}
-                    onChange={(e) => setCurrentEvent({ ...currentEvent, closingTime: e.target.value })}
-                    className="col-span-3"
-                    required
-                  />
+                  <div className="flex items-center space-x-2 col-span-3">
+                    <Switch
+                      id="isOpen"
+                      checked={currentEvent?.isOpen || false}
+                      onCheckedChange={(checked) => setCurrentEvent({ ...currentEvent, isOpen: checked })}
+                    />
+                    <Label htmlFor="isOpen" className="text-sm text-muted-foreground">
+                      {currentEvent?.isOpen ? 'Open for Reservations' : 'Closed for Reservations'}
+                    </Label>
+                  </div>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="maxReservations" className="text-right">

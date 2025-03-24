@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import EventDetails from '@/components/booking/EventDetails';
@@ -7,6 +7,7 @@ import SessionSelector from '@/components/booking/SessionSelector';
 import SeatSelector from '@/components/booking/SeatSelector';
 import ReservationSummary from '@/components/booking/ReservationSummary';
 import { useEventBooking } from '@/hooks/useEventBooking';
+import { toast } from 'sonner';
 
 const BookingPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -22,6 +23,13 @@ const BookingPage: React.FC = () => {
     setSeatCount,
     handleReservation,
   } = useEventBooking({ eventId });
+  
+  useEffect(() => {
+    if (event && !event.isOpen) {
+      toast.error("This event is not open for reservations");
+      navigate(`/event/${event.id}`);
+    }
+  }, [event, navigate]);
   
   if (!event) {
     return (
