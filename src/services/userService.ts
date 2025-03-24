@@ -20,12 +20,13 @@ export const fetchUsers = async (): Promise<UserProfile[]> => {
     
     try {
       // Using the admin API to fetch user emails if possible
-      const { data: adminData, error: adminError } = await supabase.auth.admin.listUsers();
+      const { data, error } = await supabase.auth.admin.listUsers();
       
-      if (!adminError && adminData && adminData.users) {
+      if (!error && data) {
         // If admin API succeeded, map user IDs to emails
-        adminData.users.forEach(user => {
-          if (user.email) {
+        const users = data.users || [];
+        users.forEach(user => {
+          if (user && user.email) {
             userEmails[user.id] = user.email;
           }
         });

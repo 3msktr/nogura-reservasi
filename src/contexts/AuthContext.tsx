@@ -21,6 +21,7 @@ type AuthContextType = {
   isAdmin: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -158,6 +159,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      // Check if this is the first user (for admin privileges)
+      const isFirstUser = await checkIfFirstUser();
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Note: We can't directly set admin status here because the user isn't created yet
+      // This happens after OAuth redirect, so we'll handle it in the auth state change listener
+      console.log('Google sign in initiated', data);
+      
+      // User will be redirected to Google login
+      // After successful authentication, they'll be redirected back to our app
+      // and the onAuthStateChange event will trigger
+    } catch (error: any) {
+      console.error('Google sign in error:', error);
+      toast.error(error.message || 'Error signing in with Google');
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -183,6 +214,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAdmin,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
   };
 
