@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import Layout from '@/components/Layout';
 import { Reservation } from '@/lib/types';
 import { formatDate, formatTime } from '@/utils/dateUtils';
 import { getUserReservations, cancelReservation } from '@/services/reservationService';
@@ -35,67 +34,65 @@ const MyReservationsPage: React.FC = () => {
   };
 
   return (
-    <Layout>
-      <div className="container py-12 md:py-20">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold mb-8">My Reservations</h1>
-          
-          {isLoading ? (
-            <div className="animate-pulse">Loading your reservations...</div>
-          ) : reservations.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-6">You don't have any reservations yet.</p>
-              <Button onClick={() => navigate('/')}>Browse Events</Button>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {reservations.map(reservation => (
-                <div 
-                  key={reservation.id}
-                  className="bg-white rounded-xl shadow-subtle border border-border p-6"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <h2 className="text-xl font-semibold">{reservation.event?.name}</h2>
-                    <div className={`px-3 py-1 rounded-full text-sm ${
-                      reservation.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                      reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
-                    </div>
+    <div className="container py-12 md:py-20">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl md:text-4xl font-bold mb-8">My Reservations</h1>
+        
+        {isLoading ? (
+          <div className="animate-pulse">Loading your reservations...</div>
+        ) : reservations.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground mb-6">You don't have any reservations yet.</p>
+            <Button onClick={() => navigate('/')}>Browse Events</Button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {reservations.map(reservation => (
+              <div 
+                key={reservation.id}
+                className="bg-white rounded-xl shadow-subtle border border-border p-6"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-xl font-semibold">{reservation.event?.name}</h2>
+                  <div className={`px-3 py-1 rounded-full text-sm ${
+                    reservation.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                    reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div className="flex items-center text-sm">
-                      <Calendar size={16} className="mr-2 text-muted-foreground" />
-                      <span>{reservation.event?.date ? formatDate(reservation.event.date) : 'Date not available'}</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <Clock size={16} className="mr-2 text-muted-foreground" />
-                      <span>{reservation.session?.time ? formatTime(reservation.session.time) : 'Time not available'}</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <Users size={16} className="mr-2 text-muted-foreground" />
-                      <span>{reservation.numberOfSeats} {reservation.numberOfSeats === 1 ? 'Seat' : 'Seats'}</span>
-                    </div>
-                  </div>
-                  
-                  {reservation.status !== 'cancelled' && (
-                    <Button 
-                      variant="outline" 
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => handleCancelReservation(reservation.id)}
-                    >
-                      Cancel Reservation
-                    </Button>
-                  )}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="flex items-center text-sm">
+                    <Calendar size={16} className="mr-2 text-muted-foreground" />
+                    <span>{reservation.event?.date ? formatDate(reservation.event.date) : 'Date not available'}</span>
+                  </div>
+                  <div className="flex items-center text-sm">
+                    <Clock size={16} className="mr-2 text-muted-foreground" />
+                    <span>{reservation.session?.time ? formatTime(reservation.session.time) : 'Time not available'}</span>
+                  </div>
+                  <div className="flex items-center text-sm">
+                    <Users size={16} className="mr-2 text-muted-foreground" />
+                    <span>{reservation.numberOfSeats} {reservation.numberOfSeats === 1 ? 'Seat' : 'Seats'}</span>
+                  </div>
+                </div>
+                
+                {reservation.status !== 'cancelled' && (
+                  <Button 
+                    variant="outline" 
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => handleCancelReservation(reservation.id)}
+                  >
+                    Cancel Reservation
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    </Layout>
+    </div>
   );
 };
 
