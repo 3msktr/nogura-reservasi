@@ -161,6 +161,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_available_seats: {
+        Args: {
+          p_session_id: string
+          p_seats_to_reduce: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

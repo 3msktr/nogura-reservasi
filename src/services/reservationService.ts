@@ -80,7 +80,7 @@ export const createReservation = async (
 
     if (error) throw error;
 
-    // Update the available seats
+    // Update the available seats using our new function
     const { error: updateError } = await supabase.rpc('update_available_seats', {
       p_session_id: sessionId,
       p_seats_to_reduce: numberOfSeats
@@ -121,7 +121,7 @@ export const cancelReservation = async (reservationId: string): Promise<boolean>
 
     if (error) throw error;
 
-    // Free up the seats
+    // Free up the seats by using a negative value for p_seats_to_reduce
     const { error: updateError } = await supabase.rpc('update_available_seats', {
       p_session_id: reservation.sessionid,
       p_seats_to_reduce: -reservation.numberofseats // negative to increase available seats
