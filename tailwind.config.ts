@@ -2,7 +2,6 @@
 import type { Config } from "tailwindcss";
 
 export default {
-  darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -92,12 +91,6 @@ export default {
       boxShadow: {
         subtle: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
         "subtle-lg": "0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)",
-        "dark-subtle": "0 1px 3px 0 rgba(0, 0, 0, 0.3)",
-        "dark-lg": "0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)",
-      },
-      backgroundColor: {
-        'dark-card': 'rgba(30, 30, 35, 0.7)',
-        'dark-hover': 'rgba(50, 50, 60, 0.5)',
       },
     },
   },
