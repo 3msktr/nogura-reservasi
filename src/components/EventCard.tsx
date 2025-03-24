@@ -12,7 +12,8 @@ interface EventCardProps {
 }
 
 const EventCard: React.FC<EventCardProps> = ({ event }) => {
-  const isOpen = shouldEventBeOpen(event.openingTime, event.closingTime);
+  // Calculate if event is open based only on openingTime
+  const isOpen = shouldEventBeOpen(event.openingTime);
   const totalSeats = event.sessions.reduce((acc, session) => acc + session.totalSeats, 0);
   const availableSeats = event.sessions.reduce((acc, session) => acc + session.availableSeats, 0);
   

@@ -83,6 +83,37 @@ export const calculateTimeRemaining = (targetDate: string): {
       return { days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 };
     }
     
+    // If targetDate is just a time (e.g., "09:00:00"), construct a full date
+    if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(targetDate)) {
+      console.log("Time-only format detected, converting to full date");
+      const now = new Date();
+      const [hours, minutes, seconds = '00'] = targetDate.split(':').map(Number);
+      
+      // Create a date for today with the specified time
+      const target = new Date(now);
+      target.setHours(hours, minutes, parseInt(seconds));
+      
+      // If this time has already passed today, set it for tomorrow
+      if (target <= now) {
+        target.setDate(target.getDate() + 1);
+      }
+      
+      const difference = target.getTime() - now.getTime();
+      
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+      
+      return {
+        days,
+        hours,
+        minutes,
+        seconds,
+        total: difference
+      };
+    }
+    
     const target = new Date(targetDate).getTime();
     
     // Check if target date is valid
@@ -123,33 +154,33 @@ export const calculateTimeRemaining = (targetDate: string): {
   }
 };
 
-export const isEventOpen = (openingTime: string, closingTime: string): boolean => {
+// Update isEventOpen to only depend on openingTime
+export const isEventOpen = (openingTime: string): boolean => {
   try {
     // Handle invalid input
-    if (!openingTime || !closingTime) {
+    if (!openingTime) {
       return false;
     }
     
     const now = new Date();
     const opening = new Date(openingTime);
-    const closing = new Date(closingTime);
     
-    // Check if dates are valid
-    if (isNaN(opening.getTime()) || isNaN(closing.getTime())) {
-      console.error("Invalid date in isEventOpen:", { openingTime, closingTime });
+    // Check if date is valid
+    if (isNaN(opening.getTime())) {
+      console.error("Invalid date in isEventOpen:", { openingTime });
       return false;
     }
     
-    return now >= opening && now <= closing;
+    return now >= opening;
   } catch (error) {
     console.error("Error in isEventOpen:", error);
     return false;
   }
 };
 
-// Using the more robust implementation from isEventOpen and removing the duplicate function
-export const shouldEventBeOpen = (openingTime: string, closingTime: string): boolean => {
-  return isEventOpen(openingTime, closingTime);
+// Update shouldEventBeOpen to only depend on openingTime
+export const shouldEventBeOpen = (openingTime: string): boolean => {
+  return isEventOpen(openingTime);
 };
 
 // Enhanced date validation
@@ -158,6 +189,11 @@ export const isValidDate = (dateString: string): boolean => {
     // Handle empty or null values
     if (!dateString || dateString === "null" || dateString === "undefined") {
       return false;
+    }
+    
+    // If dateString is just a time (e.g., "09:00:00"), it's valid for our purposes
+    if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(dateString)) {
+      return true;
     }
     
     const date = new Date(dateString);

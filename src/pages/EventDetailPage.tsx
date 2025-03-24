@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import CountdownTimer from '@/components/CountdownTimer';
 import { Event } from '@/lib/types';
-import { formatDate, formatTime, shouldEventBeOpen, isValidDate } from '@/utils/dateUtils';
+import { formatDate, formatTime, isValidDate } from '@/utils/dateUtils';
 import { getEventById } from '@/services/eventService';
 import { toast } from 'sonner';
 
@@ -40,23 +40,22 @@ const EventDetailPage: React.FC = () => {
         console.log('Event data received:', data);
         setEvent(data);
         
-        // Validate opening and closing times
+        // Validate opening time
         const openingValid = isValidDate(data.openingTime);
-        const closingValid = isValidDate(data.closingTime);
         
-        if (!openingValid || !closingValid) {
-          console.error('Invalid date values in event:', { 
+        if (!openingValid) {
+          console.error('Invalid date value in event:', { 
             openingTime: data.openingTime, 
-            closingTime: data.closingTime,
-            openingValid,
-            closingValid
+            openingValid
           });
           toast.error('There was an issue with the event dates. Please contact support.');
         }
         
-        // Calculate if the event is open
-        const open = shouldEventBeOpen(data.openingTime, data.closingTime);
-        console.log('Event open status:', open);
+        // Calculate if the event is open based on if current time is past opening time
+        const now = new Date();
+        const openingTime = new Date(data.openingTime);
+        const open = openingValid && now >= openingTime;
+        console.log('Event open status:', open, 'Current time:', now, 'Opening time:', openingTime);
         setIsOpen(open);
       } catch (error) {
         console.error('Error fetching event:', error);
