@@ -14,31 +14,66 @@ const EventDetailPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const [event, setEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
   
   useEffect(() => {
     const fetchEvent = async () => {
-      if (eventId) {
-        setIsLoading(true);
-        try {
-          const data = await getEventById(eventId);
-          setEvent(data);
-          
-          // Validate opening and closing times
-          if (data && (!isValidDate(data.openingTime) || !isValidDate(data.closingTime))) {
-            console.error('Invalid date values in event:', data);
-            toast.error('There was an issue with the event dates. Please contact support.');
-          }
-        } catch (error) {
-          console.error('Error fetching event:', error);
-          toast.error('Failed to load event details');
-        } finally {
+      if (!eventId) {
+        console.error('No eventId provided');
+        toast.error('Event ID is missing');
+        setIsLoading(false);
+        return;
+      }
+      
+      setIsLoading(true);
+      try {
+        console.log('Fetching event with ID:', eventId);
+        const data = await getEventById(eventId);
+        
+        if (!data) {
+          console.error('Event not found:', eventId);
+          toast.error('Event not found');
           setIsLoading(false);
+          return;
         }
+        
+        console.log('Event data received:', data);
+        setEvent(data);
+        
+        // Validate opening and closing times
+        const openingValid = isValidDate(data.openingTime);
+        const closingValid = isValidDate(data.closingTime);
+        
+        if (!openingValid || !closingValid) {
+          console.error('Invalid date values in event:', { 
+            openingTime: data.openingTime, 
+            closingTime: data.closingTime,
+            openingValid,
+            closingValid
+          });
+          toast.error('There was an issue with the event dates. Please contact support.');
+        }
+        
+        // Calculate if the event is open
+        const open = shouldEventBeOpen(data.openingTime, data.closingTime);
+        console.log('Event open status:', open);
+        setIsOpen(open);
+      } catch (error) {
+        console.error('Error fetching event:', error);
+        toast.error('Failed to load event details');
+      } finally {
+        setIsLoading(false);
       }
     };
     
     fetchEvent();
   }, [eventId]);
+  
+  const handleCountdownComplete = () => {
+    console.log('Countdown completed, updating isOpen state');
+    setIsOpen(true);
+    toast.success("Reservations are now open!");
+  };
   
   if (isLoading) {
     return (
@@ -66,13 +101,13 @@ const EventDetailPage: React.FC = () => {
     );
   }
   
-  const isOpen = event ? shouldEventBeOpen(event.openingTime, event.closingTime) : false;
-  const totalSeats = event?.sessions.reduce((acc, session) => acc + session.totalSeats, 0) || 0;
-  const availableSeats = event?.sessions.reduce((acc, session) => acc + session.availableSeats, 0) || 0;
+  const totalSeats = event.sessions.reduce((acc, session) => acc + session.totalSeats, 0) || 0;
+  const availableSeats = event.sessions.reduce((acc, session) => acc + session.availableSeats, 0) || 0;
   
   // Log to debug countdown timer issues
-  console.log('Event opening time:', event.openingTime);
-  console.log('Is valid date:', isValidDate(event.openingTime));
+  console.log('Event detail render - opening time:', event.openingTime);
+  console.log('Is valid opening date:', isValidDate(event.openingTime));
+  console.log('Current isOpen state:', isOpen);
   
   return (
     <Layout>
@@ -132,11 +167,7 @@ const EventDetailPage: React.FC = () => {
                     {isValidDate(event.openingTime) ? (
                       <CountdownTimer 
                         targetDate={event.openingTime} 
-                        onComplete={() => {
-                          toast.success("Reservations are now open!");
-                          // Force a re-render to update the isOpen state
-                          setEvent({...event});
-                        }}
+                        onComplete={handleCountdownComplete}
                       />
                     ) : (
                       <div className="text-center text-sm text-muted-foreground">

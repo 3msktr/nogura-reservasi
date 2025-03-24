@@ -15,6 +15,9 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
   const [isValid, setIsValid] = useState(true);
   
   useEffect(() => {
+    // Log for debugging
+    console.log('CountdownTimer initialized with targetDate:', targetDate);
+    
     // Check if the target date is valid
     if (!isValidDate(targetDate)) {
       console.error('Invalid target date provided to CountdownTimer:', targetDate);
@@ -28,13 +31,20 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
       setTimeRemaining(remaining);
       
       if (remaining.total <= 0) {
+        console.log('Countdown completed for:', targetDate);
         clearInterval(timer);
-        onComplete && onComplete();
+        if (onComplete) {
+          console.log('Calling onComplete callback');
+          onComplete();
+        }
       }
     }, 1000);
     
     // Cleanup the interval when component unmounts or targetDate changes
-    return () => clearInterval(timer);
+    return () => {
+      console.log('Cleaning up countdown timer for:', targetDate);
+      clearInterval(timer);
+    };
   }, [targetDate, onComplete]);
   
   const padWithZero = (num: number) => {
