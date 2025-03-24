@@ -77,6 +77,31 @@
   .dark .glass {
     @apply bg-black/50 backdrop-blur-xl border border-white/5 shadow-sm;
   }
+
+  /* Dark mode specific utilities */
+  .dark .hover-lift:hover {
+    @apply shadow-[0_10px_25px_-5px_rgba(0,0,0,0.3),0_8px_10px_-6px_rgba(0,0,0,0.2)];
+  }
+  
+  .dark .card-shadow {
+    @apply shadow-[0_4px_12px_rgba(0,0,0,0.5)];
+  }
+  
+  .dark .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/80;
+  }
+  
+  .dark .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/70;
+  }
+  
+  .dark ::-webkit-scrollbar-thumb {
+    background: #555555;
+  }
+  
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: #777777;
+  }
 }
 
 /* Custom Animations */

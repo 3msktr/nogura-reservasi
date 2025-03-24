@@ -38,13 +38,13 @@ const ThemeToggle: React.FC = () => {
 
   return (
     <Button 
-      variant="ghost" 
+      variant="outline" 
       size="icon" 
       onClick={toggleTheme}
-      className="rounded-full"
+      className="rounded-full hover:bg-secondary transition-colors"
       title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
     >
-      {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+      {theme === 'light' ? <Moon size={18} className="text-primary" /> : <Sun size={18} className="text-primary" />}
     </Button>
   );
 };
