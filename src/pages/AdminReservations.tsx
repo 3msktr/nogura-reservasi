@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -233,6 +234,7 @@ const AdminReservations = () => {
   const handleWhatsAppClick = (reservation: ExtendedReservation) => {
     setSelectedReservation(reservation);
     
+    // Use the default WhatsApp template when opening the dialog
     const message = generateWhatsAppTemplate(reservation);
     
     setWhatsappMessage(message);
