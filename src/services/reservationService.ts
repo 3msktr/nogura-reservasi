@@ -72,7 +72,12 @@ export const checkExistingReservation = async (eventId: string): Promise<boolean
 export const createReservation = async (
   eventId: string,
   sessionId: string,
-  numberOfSeats: number
+  numberOfSeats: number,
+  contactInfo?: {
+    contactName: string;
+    phoneNumber: string;
+    allergyNotes?: string;
+  }
 ): Promise<boolean> => {
   try {
     const { data: user } = await supabase.auth.getUser();
@@ -103,13 +108,16 @@ export const createReservation = async (
       return false;
     }
 
-    // Create the reservation
+    // Create the reservation with contact information
     const { error } = await supabase.from("reservations").insert({
       userid: user.user.id,
       eventid: eventId,
       sessionid: sessionId,
       numberofseats: numberOfSeats,
-      status: "confirmed"
+      status: "confirmed",
+      contact_name: contactInfo?.contactName,
+      phone_number: contactInfo?.phoneNumber ? `+62${contactInfo.phoneNumber}` : null,
+      allergy_notes: contactInfo?.allergyNotes
     });
 
     if (error) throw error;

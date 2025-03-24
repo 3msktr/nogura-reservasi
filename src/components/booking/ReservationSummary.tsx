@@ -50,7 +50,7 @@ const ReservationSummary: React.FC<ReservationSummaryProps> = ({
             disabled={isLoading} 
             onClick={onReservation}
           >
-            {isLoading ? "Processing..." : "Confirm Reservation"}
+            {isLoading ? "Processing..." : "Proceed to Confirmation"}
           </Button>
         </>
       ) : (

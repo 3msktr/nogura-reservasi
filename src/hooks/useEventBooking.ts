@@ -10,6 +10,12 @@ interface UseEventBookingProps {
   eventId: string | undefined;
 }
 
+interface ContactInfo {
+  contactName: string;
+  phoneNumber: string;
+  allergyNotes?: string;
+}
+
 export const useEventBooking = ({ eventId }: UseEventBookingProps) => {
   const navigate = useNavigate();
   
@@ -17,6 +23,7 @@ export const useEventBooking = ({ eventId }: UseEventBookingProps) => {
   const [selectedSession, setSelectedSession] = useState<string>('');
   const [seatCount, setSeatCount] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showConfirmationForm, setShowConfirmationForm] = useState<boolean>(false);
   
   useEffect(() => {
     const fetchEvent = async () => {
@@ -48,7 +55,17 @@ export const useEventBooking = ({ eventId }: UseEventBookingProps) => {
     return event?.sessions.find(session => session.id === selectedSession);
   };
   
-  const handleReservation = async () => {
+  const initiateReservation = () => {
+    if (!event || !selectedSession) {
+      toast.error("Please select a session");
+      return;
+    }
+    
+    // Show confirmation form instead of immediately creating reservation
+    setShowConfirmationForm(true);
+  };
+  
+  const handleConfirmReservation = async (contactInfo: ContactInfo) => {
     if (!event || !selectedSession) {
       toast.error("Please select a session");
       return;
@@ -59,7 +76,8 @@ export const useEventBooking = ({ eventId }: UseEventBookingProps) => {
     const success = await createReservation(
       event.id,
       selectedSession,
-      seatCount
+      seatCount,
+      contactInfo
     );
     
     setIsLoading(false);
@@ -77,8 +95,11 @@ export const useEventBooking = ({ eventId }: UseEventBookingProps) => {
     seatCount,
     isLoading,
     selectedSessionData,
+    showConfirmationForm,
     handleSessionChange,
     setSeatCount,
-    handleReservation,
+    initiateReservation,
+    handleConfirmReservation,
+    setShowConfirmationForm,
   };
 };

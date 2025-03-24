@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -54,7 +53,10 @@ const AdminReservations = () => {
         status: item.status as "pending" | "confirmed" | "cancelled", // Explicitly cast to the union type
         createdAt: item.created_at,
         event: item.event,
-        session: item.session
+        session: item.session,
+        contactName: item.contact_name,
+        phoneNumber: item.phone_number,
+        allergyNotes: item.allergy_notes,
       }));
 
       // Fetch user names
@@ -157,6 +159,7 @@ const AdminReservations = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>User</TableHead>
+                  <TableHead>Contact</TableHead>
                   <TableHead>Event</TableHead>
                   <TableHead>Date & Time</TableHead>
                   <TableHead>Seats</TableHead>
@@ -179,6 +182,18 @@ const AdminReservations = () => {
                           <User className="mr-2 h-4 w-4 text-muted-foreground" />
                           {reservation.userName}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {reservation.contactName ? (
+                          <div className="flex flex-col text-sm">
+                            <span>{reservation.contactName}</span>
+                            {reservation.phoneNumber && (
+                              <span className="text-muted-foreground">{reservation.phoneNumber}</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">No contact info</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         {reservation.event?.name || 'Unknown Event'}

@@ -6,6 +6,7 @@ import EventDetails from '@/components/booking/EventDetails';
 import SessionSelector from '@/components/booking/SessionSelector';
 import SeatSelector from '@/components/booking/SeatSelector';
 import ReservationSummary from '@/components/booking/ReservationSummary';
+import ReservationConfirmationForm from '@/components/booking/ReservationConfirmationForm';
 import { useEventBooking } from '@/hooks/useEventBooking';
 import { toast } from 'sonner';
 import { checkExistingReservation } from '@/services/reservationService';
@@ -21,9 +22,12 @@ const BookingPage: React.FC = () => {
     seatCount,
     isLoading,
     selectedSessionData,
+    showConfirmationForm,
     handleSessionChange,
     setSeatCount,
-    handleReservation,
+    initiateReservation,
+    handleConfirmReservation,
+    setShowConfirmationForm
   } = useEventBooking({ eventId });
   
   useEffect(() => {
@@ -72,36 +76,63 @@ const BookingPage: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-              <div className="md:col-span-2 animate-slide-up">
-                <SessionSelector 
-                  sessions={event.sessions}
-                  selectedSession={selectedSession}
-                  onSessionChange={handleSessionChange}
-                />
-                
-                {selectedSession && (
-                  <SeatSelector 
-                    seatCount={seatCount}
-                    setSeatCount={setSeatCount}
-                    maxSeats={Math.min(
-                      selectedSessionData?.availableSeats || 1, 
-                      event.maxReservationsPerUser
+            <>
+              {showConfirmationForm ? (
+                <div className="animate-fade-in max-w-md mx-auto my-8">
+                  <div className="bg-card border rounded-xl p-6 shadow-sm">
+                    <div className="mb-6">
+                      <h2 className="text-xl font-semibold mb-2">Confirm Your Reservation</h2>
+                      <p className="text-muted-foreground text-sm">
+                        Please provide your contact details to complete the reservation.
+                      </p>
+                    </div>
+                    
+                    <ReservationConfirmationForm 
+                      onSubmit={handleConfirmReservation} 
+                      isLoading={isLoading} 
+                    />
+                    
+                    <button 
+                      className="mt-4 text-sm text-muted-foreground hover:text-foreground"
+                      onClick={() => setShowConfirmationForm(false)}
+                    >
+                      ← Back to selection
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                  <div className="md:col-span-2 animate-slide-up">
+                    <SessionSelector 
+                      sessions={event.sessions}
+                      selectedSession={selectedSession}
+                      onSessionChange={handleSessionChange}
+                    />
+                    
+                    {selectedSession && (
+                      <SeatSelector 
+                        seatCount={seatCount}
+                        setSeatCount={setSeatCount}
+                        maxSeats={Math.min(
+                          selectedSessionData?.availableSeats || 1, 
+                          event.maxReservationsPerUser
+                        )}
+                      />
                     )}
-                  />
-                )}
-              </div>
-              
-              <div className="animate-slide-up delay-100">
-                <ReservationSummary 
-                  event={event}
-                  selectedSessionData={selectedSessionData}
-                  seatCount={seatCount}
-                  isLoading={isLoading}
-                  onReservation={handleReservation}
-                />
-              </div>
-            </div>
+                  </div>
+                  
+                  <div className="animate-slide-up delay-100">
+                    <ReservationSummary 
+                      event={event}
+                      selectedSessionData={selectedSessionData}
+                      seatCount={seatCount}
+                      isLoading={isLoading}
+                      onReservation={initiateReservation}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -71,28 +71,37 @@ export type Database = {
       }
       reservations: {
         Row: {
+          allergy_notes: string | null
+          contact_name: string | null
           created_at: string
           eventid: string
           id: string
           numberofseats: number
+          phone_number: string | null
           sessionid: string
           status: string
           userid: string
         }
         Insert: {
+          allergy_notes?: string | null
+          contact_name?: string | null
           created_at?: string
           eventid: string
           id?: string
           numberofseats: number
+          phone_number?: string | null
           sessionid: string
           status?: string
           userid: string
         }
         Update: {
+          allergy_notes?: string | null
+          contact_name?: string | null
           created_at?: string
           eventid?: string
           id?: string
           numberofseats?: number
+          phone_number?: string | null
           sessionid?: string
           status?: string
           userid?: string
