@@ -33,12 +33,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Users, UserPlus, Trash2, ShieldCheck, ShieldOff } from 'lucide-react';
+import { Users, UserPlus, Trash2, ShieldCheck, ShieldOff, Search, Mail, Phone } from 'lucide-react';
 
 type UserProfile = {
   id: string;
   full_name: string | null;
   email: string;
+  phone_number: string | null;
   is_admin: boolean;
 };
 
@@ -55,10 +56,13 @@ const AdminUsers = () => {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserFullName, setNewUserFullName] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserPhone, setNewUserPhone] = useState('');
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
@@ -66,8 +70,8 @@ const AdminUsers = () => {
   const [isDeletingUser, setIsDeletingUser] = useState(false);
 
   // User metrics
-  const totalUsers = users.length;
-  const adminUsers = users.filter(user => user.is_admin).length;
+  const totalUsers = filteredUsers.length;
+  const adminUsers = filteredUsers.filter(user => user.is_admin).length;
   const regularUsers = totalUsers - adminUsers;
 
   useEffect(() => {
@@ -81,6 +85,21 @@ const AdminUsers = () => {
     fetchUsers();
   }, []);
 
+  // Filter users when search query changes
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredUsers(users);
+    } else {
+      const query = searchQuery.toLowerCase();
+      const filtered = users.filter(user => 
+        (user.full_name?.toLowerCase().includes(query) || 
+        user.email.toLowerCase().includes(query) ||
+        user.phone_number?.toLowerCase().includes(query))
+      );
+      setFilteredUsers(filtered);
+    }
+  }, [searchQuery, users]);
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -88,7 +107,7 @@ const AdminUsers = () => {
       // First, fetch all user profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, full_name, is_admin');
+        .select('id, full_name, phone_number, is_admin');
 
       if (profilesError) throw profilesError;
 
@@ -105,11 +124,13 @@ const AdminUsers = () => {
         const usersWithEmails = profiles.map(profile => ({
           id: profile.id,
           full_name: profile.full_name,
+          phone_number: profile.phone_number,
           is_admin: profile.is_admin || false,
           email: `user-${profile.id.substring(0, 8)}@example.com`, // Placeholder email
         }));
         
         setUsers(usersWithEmails);
+        setFilteredUsers(usersWithEmails);
       } else {
         // Map the emails to the profiles
         const adminUsers = adminResponse?.users || [];
@@ -119,12 +140,14 @@ const AdminUsers = () => {
           return {
             id: profile.id,
             full_name: profile.full_name,
+            phone_number: profile.phone_number,
             is_admin: profile.is_admin || false,
             email: userRecord?.email || `user-${profile.id.substring(0, 8)}@example.com`,
           };
         });
         
         setUsers(usersWithEmails);
+        setFilteredUsers(usersWithEmails);
       }
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -140,11 +163,22 @@ const AdminUsers = () => {
       
       if (success) {
         // Update local state
-        setUsers(users.map(user => 
+        const updatedUsers = users.map(user => 
           user.id === userId 
             ? { ...user, is_admin: !currentStatus } 
             : user
-        ));
+        );
+        setUsers(updatedUsers);
+
+        // Update filtered users too
+        setFilteredUsers(prevFiltered => 
+          prevFiltered.map(user => 
+            user.id === userId 
+              ? { ...user, is_admin: !currentStatus } 
+              : user
+          )
+        );
+        
         toast.success(`User ${!currentStatus ? 'promoted to' : 'removed from'} admin role`);
       } else {
         toast.error('Failed to update admin status');
@@ -170,6 +204,7 @@ const AdminUsers = () => {
         options: {
           data: {
             full_name: newUserFullName,
+            phone_number: newUserPhone || null,
           },
         },
       });
@@ -181,6 +216,7 @@ const AdminUsers = () => {
       setNewUserEmail('');
       setNewUserFullName('');
       setNewUserPassword('');
+      setNewUserPhone('');
       
       // Refresh the users list
       fetchUsers();
@@ -207,7 +243,10 @@ const AdminUsers = () => {
       if (error) throw error;
 
       // Remove user from local state
-      setUsers(users.filter(user => user.id !== deleteUserId));
+      const updatedUsers = users.filter(user => user.id !== deleteUserId);
+      setUsers(updatedUsers);
+      setFilteredUsers(updatedUsers);
+      
       toast.success('User deleted successfully');
       setIsDeleteDialogOpen(false);
       setDeleteUserId(null);
@@ -261,6 +300,16 @@ const AdminUsers = () => {
                       value={newUserEmail}
                       onChange={(e) => setNewUserEmail(e.target.value)}
                       placeholder="john@example.com"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={newUserPhone}
+                      onChange={(e) => setNewUserPhone(e.target.value)}
+                      placeholder="+1234567890 (optional)"
                     />
                   </div>
                   <div className="grid gap-2">
@@ -318,6 +367,17 @@ const AdminUsers = () => {
             </Dialog>
           </div>
 
+          {/* Search Box */}
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, email, or phone..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
           {/* Dashboard Cards */}
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
@@ -368,16 +428,29 @@ const AdminUsers = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
+                    <TableHead>Contact Information</TableHead>
                     <TableHead>Admin Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
+                  {filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell>{user.full_name || 'No name'}</TableCell>
-                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1 text-sm">
+                            <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                            {user.email}
+                          </div>
+                          {user.phone_number && (
+                            <div className="flex items-center gap-1 text-sm">
+                              <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                              {user.phone_number}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs ${user.is_admin ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
                           {user.is_admin ? 'Admin' : 'User'}
@@ -410,6 +483,13 @@ const AdminUsers = () => {
                       </TableCell>
                     </TableRow>
                   ))}
+                  {filteredUsers.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                        {users.length === 0 ? 'No users found' : 'No users match your search criteria'}
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
