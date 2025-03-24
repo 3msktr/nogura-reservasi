@@ -1,100 +1,11 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import Layout from '@/components/Layout';
 import EventCard from '@/components/EventCard';
-import { Event } from '@/lib/types';
-
-// Mock data for events
-const mockEvents: Event[] = [
-  {
-    id: "1",
-    name: "Spring Tasting Menu",
-    description: "Experience our exclusive spring tasting menu featuring the finest seasonal ingredients, prepared with precision and artistry by our executive chef.",
-    date: "2024-06-30",
-    isOpen: false,
-    openingTime: "2024-06-25T10:00:00",
-    closingTime: "2024-06-30T18:00:00",
-    maxReservationsPerUser: 4,
-    sessions: [
-      {
-        id: "s1",
-        time: "13:00",
-        availableSeats: 20,
-        totalSeats: 30,
-        eventId: "1"
-      },
-      {
-        id: "s2",
-        time: "17:00",
-        availableSeats: 25,
-        totalSeats: 30,
-        eventId: "1"
-      },
-      {
-        id: "s3",
-        time: "20:00",
-        availableSeats: 15,
-        totalSeats: 30,
-        eventId: "1"
-      }
-    ]
-  },
-  {
-    id: "2",
-    name: "Chef's Table Experience",
-    description: "Join us for an intimate dining experience at our Chef's Table. Watch as our culinary team prepares an exclusive tasting menu right before your eyes.",
-    date: "2024-07-15",
-    isOpen: true,
-    openingTime: "2024-06-20T10:00:00",
-    closingTime: "2024-07-14T23:59:59",
-    maxReservationsPerUser: 2,
-    sessions: [
-      {
-        id: "s4",
-        time: "16:00",
-        availableSeats: 8,
-        totalSeats: 10,
-        eventId: "2"
-      },
-      {
-        id: "s5",
-        time: "21:00",
-        availableSeats: 6,
-        totalSeats: 10,
-        eventId: "2"
-      }
-    ]
-  },
-  {
-    id: "3",
-    name: "Summer Wine Pairing Dinner",
-    description: "A special evening featuring a six-course tasting menu perfectly paired with exceptional wines from around the world, selected by our sommelier.",
-    date: "2024-08-05",
-    isOpen: false,
-    openingTime: "2024-07-25T10:00:00",
-    closingTime: "2024-08-04T23:59:59",
-    maxReservationsPerUser: 4,
-    sessions: [
-      {
-        id: "s6",
-        time: "14:00",
-        availableSeats: 30,
-        totalSeats: 40,
-        eventId: "3"
-      },
-      {
-        id: "s7",
-        time: "20:00",
-        availableSeats: 25,
-        totalSeats: 40,
-        eventId: "3"
-      }
-    ]
-  }
-];
+import { useEvents } from '@/hooks/useEvents';
 
 const Index: React.FC = () => {
-  const [events] = useState<Event[]>(mockEvents);
+  const { events, isLoading } = useEvents();
 
   return (
     <Layout>
@@ -109,13 +20,19 @@ const Index: React.FC = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {events.map((event, index) => (
-              <div key={event.id} style={{ animationDelay: `${index * 100}ms` }}>
-                <EventCard event={event} />
-              </div>
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-pulse text-lg">Loading events...</div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {events.map((event, index) => (
+                <div key={event.id} style={{ animationDelay: `${index * 100}ms` }}>
+                  <EventCard event={event} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
       

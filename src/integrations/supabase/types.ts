@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      events: {
+        Row: {
+          closingtime: string
+          created_at: string
+          date: string
+          description: string
+          id: string
+          isopen: boolean
+          maxreservationsperuser: number
+          name: string
+          openingtime: string
+        }
+        Insert: {
+          closingtime: string
+          created_at?: string
+          date: string
+          description: string
+          id?: string
+          isopen?: boolean
+          maxreservationsperuser?: number
+          name: string
+          openingtime: string
+        }
+        Update: {
+          closingtime?: string
+          created_at?: string
+          date?: string
+          description?: string
+          id?: string
+          isopen?: boolean
+          maxreservationsperuser?: number
+          name?: string
+          openingtime?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -32,6 +68,86 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      reservations: {
+        Row: {
+          created_at: string
+          eventid: string
+          id: string
+          numberofseats: number
+          sessionid: string
+          status: string
+          userid: string
+        }
+        Insert: {
+          created_at?: string
+          eventid: string
+          id?: string
+          numberofseats: number
+          sessionid: string
+          status?: string
+          userid: string
+        }
+        Update: {
+          created_at?: string
+          eventid?: string
+          id?: string
+          numberofseats?: number
+          sessionid?: string
+          status?: string
+          userid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_eventid_fkey"
+            columns: ["eventid"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_sessionid_fkey"
+            columns: ["sessionid"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sessions: {
+        Row: {
+          availableseats: number
+          created_at: string
+          eventid: string
+          id: string
+          time: string
+          totalseats: number
+        }
+        Insert: {
+          availableseats: number
+          created_at?: string
+          eventid: string
+          id?: string
+          time: string
+          totalseats: number
+        }
+        Update: {
+          availableseats?: number
+          created_at?: string
+          eventid?: string
+          id?: string
+          time?: string
+          totalseats?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_eventid_fkey"
+            columns: ["eventid"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

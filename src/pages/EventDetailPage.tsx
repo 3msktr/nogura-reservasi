@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Calendar, Clock, Users } from 'lucide-react';
@@ -6,68 +7,7 @@ import Layout from '@/components/Layout';
 import CountdownTimer from '@/components/CountdownTimer';
 import { Event } from '@/lib/types';
 import { formatDate, formatTime, shouldEventBeOpen } from '@/utils/dateUtils';
-
-const mockEvents: Event[] = [
-  {
-    id: "1",
-    name: "Spring Tasting Menu",
-    description: "Experience our exclusive spring tasting menu featuring the finest seasonal ingredients, prepared with precision and artistry by our executive chef.",
-    date: "2024-06-30",
-    isOpen: false,
-    openingTime: "2024-06-25T10:00:00",
-    closingTime: "2024-06-30T18:00:00",
-    maxReservationsPerUser: 4,
-    sessions: [
-      {
-        id: "s1",
-        time: "13:00",
-        availableSeats: 20,
-        totalSeats: 30,
-        eventId: "1"
-      },
-      {
-        id: "s2",
-        time: "17:00",
-        availableSeats: 25,
-        totalSeats: 30,
-        eventId: "1"
-      },
-      {
-        id: "s3",
-        time: "20:00",
-        availableSeats: 15,
-        totalSeats: 30,
-        eventId: "1"
-      }
-    ]
-  },
-  {
-    id: "2",
-    name: "Chef's Table Experience",
-    description: "Join us for an intimate dining experience at our Chef's Table. Watch as our culinary team prepares an exclusive tasting menu right before your eyes.",
-    date: "2024-07-15",
-    isOpen: true,
-    openingTime: "2024-06-20T10:00:00",
-    closingTime: "2024-07-14T23:59:59",
-    maxReservationsPerUser: 2,
-    sessions: [
-      {
-        id: "s4",
-        time: "16:00",
-        availableSeats: 8,
-        totalSeats: 10,
-        eventId: "2"
-      },
-      {
-        id: "s5",
-        time: "21:00",
-        availableSeats: 6,
-        totalSeats: 10,
-        eventId: "2"
-      }
-    ]
-  },
-];
+import { getEventById } from '@/services/eventService';
 
 const EventDetailPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -75,11 +15,16 @@ const EventDetailPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
   useEffect(() => {
-    setTimeout(() => {
-      const foundEvent = mockEvents.find(e => e.id === eventId);
-      setEvent(foundEvent || null);
-      setIsLoading(false);
-    }, 500);
+    const fetchEvent = async () => {
+      if (eventId) {
+        setIsLoading(true);
+        const data = await getEventById(eventId);
+        setEvent(data);
+        setIsLoading(false);
+      }
+    };
+    
+    fetchEvent();
   }, [eventId]);
   
   if (isLoading) {
