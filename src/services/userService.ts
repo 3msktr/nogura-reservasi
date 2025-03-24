@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfile } from '@/components/admin/UsersTable';
 
@@ -97,19 +96,9 @@ export const deleteUser = async (userId: string): Promise<void> => {
       throw deleteError;
     }
     
-    // Attempt to delete the user from auth.users using RPC
-    // Note: This requires a custom function to be set up in Supabase
-    try {
-      const { error: authDeleteError } = await supabase.rpc('delete_user', { user_id: userId });
-      
-      if (authDeleteError) {
-        console.warn('Could not delete user from auth.users:', authDeleteError);
-        // We continue anyway since the profile was deleted
-      }
-    } catch (rpcError) {
-      console.warn('RPC delete_user not available or failed:', rpcError);
-      // We continue anyway since the profile was deleted
-    }
+    // Note: We can't directly delete from auth.users as it requires admin privileges
+    // This would need to be handled by a Supabase Edge Function or a custom server
+    console.log('User profile deleted successfully. Note: The auth record may still exist.');
   } catch (error) {
     console.error('Error in deleteUser function:', error);
     throw error;
