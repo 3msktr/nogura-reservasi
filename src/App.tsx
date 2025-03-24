@@ -17,6 +17,7 @@ import EventDetailPage from "./pages/EventDetailPage";
 import AccountPage from "./pages/AccountPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
+import Layout from "./components/Layout";
 
 const queryClient = new QueryClient();
 

@@ -5,6 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
+  
+  console.log('ProtectedRoute - User:', user?.id);
+  console.log('ProtectedRoute - Is Loading:', isLoading);
 
   if (isLoading) {
     return (
@@ -15,9 +18,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   }
 
   if (!user) {
+    console.log('ProtectedRoute - Redirecting to login (not authenticated)');
     return <Navigate to="/login" replace />;
   }
 
+  console.log('ProtectedRoute - Allowing access to protected page');
   return <>{children}</>;
 };
 
