@@ -42,6 +42,15 @@ type UserProfile = {
   is_admin: boolean;
 };
 
+// Define types for Supabase auth admin response
+interface AdminUsersResponse {
+  users?: Array<{
+    id: string;
+    email?: string;
+  }>;
+  error?: Error;
+}
+
 const AdminUsers = () => {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
@@ -83,9 +92,11 @@ const AdminUsers = () => {
 
       if (profilesError) throw profilesError;
 
-      // Then, fetch all user emails from the auth.users table via a Supabase function
-      // We'll use an RPC call to a custom function for this
-      const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
+      // Then, fetch all user emails from the auth.users table via Supabase admin API
+      const { data: adminResponse, error: usersError } = await supabase.auth.admin.listUsers() as { 
+        data: AdminUsersResponse;
+        error: Error | null;
+      };
 
       if (usersError) {
         // If admin API isn't available (likely in dev), we'll use dummy emails
@@ -101,8 +112,10 @@ const AdminUsers = () => {
         setUsers(usersWithEmails);
       } else {
         // Map the emails to the profiles
+        const adminUsers = adminResponse?.users || [];
+        
         const usersWithEmails = profiles.map(profile => {
-          const userRecord = users?.users?.find(u => u.id === profile.id);
+          const userRecord = adminUsers.find(u => u.id === profile.id);
           return {
             id: profile.id,
             full_name: profile.full_name,
