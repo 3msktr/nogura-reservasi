@@ -1,14 +1,9 @@
-User-agent: Googlebot
-Allow: /
 
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
+# Allow all robots to index the site
 User-agent: *
 Allow: /
+
+# Disallow sensitive admin routes
+Disallow: /admin/
+Disallow: /login
+Disallow: /signup
