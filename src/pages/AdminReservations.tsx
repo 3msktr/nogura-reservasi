@@ -51,7 +51,7 @@ const AdminReservations = () => {
         eventId: item.eventid,
         sessionId: item.sessionid,
         numberOfSeats: item.numberofseats,
-        status: item.status,
+        status: item.status as "pending" | "confirmed" | "cancelled", // Explicitly cast to the union type
         createdAt: item.created_at,
         event: item.event,
         session: item.session
@@ -86,7 +86,7 @@ const AdminReservations = () => {
     }
   };
 
-  const handleUpdateStatus = async (reservationId: string, status: 'confirmed' | 'cancelled') => {
+  const handleUpdateStatus = async (reservationId: string, newStatus: 'confirmed' | 'cancelled') => {
     try {
       const reservation = reservations.find(r => r.id === reservationId);
       if (!reservation) return;
@@ -94,13 +94,13 @@ const AdminReservations = () => {
       // Update the reservation status
       const { error } = await supabase
         .from('reservations')
-        .update({ status })
+        .update({ status: newStatus })
         .eq('id', reservationId);
 
       if (error) throw error;
 
       // If we're cancelling a reservation, we need to free up the seats
-      if (status === 'cancelled' && reservation.status !== 'cancelled') {
+      if (newStatus === 'cancelled' && reservation.status !== 'cancelled') {
         // Free up the seats by using a negative value for p_seats_to_reduce
         const { error: updateError } = await supabase.rpc('update_available_seats', {
           p_session_id: reservation.sessionId,
@@ -111,7 +111,7 @@ const AdminReservations = () => {
       }
 
       // If we're confirming a previously cancelled reservation, we need to take the seats
-      if (status === 'confirmed' && reservation.status === 'cancelled') {
+      if (newStatus === 'confirmed' && reservation.status === 'cancelled') {
         // Take the seats by using a positive value for p_seats_to_reduce
         const { error: updateError } = await supabase.rpc('update_available_seats', {
           p_session_id: reservation.sessionId,
@@ -121,7 +121,7 @@ const AdminReservations = () => {
         if (updateError) throw updateError;
       }
 
-      toast.success(`Reservation ${status === 'confirmed' ? 'confirmed' : 'cancelled'} successfully`);
+      toast.success(`Reservation ${newStatus === 'confirmed' ? 'confirmed' : 'cancelled'} successfully`);
       fetchReservations();
     } catch (error) {
       console.error(`Error updating reservation:`, error);
@@ -207,7 +207,6 @@ const AdminReservations = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleUpdateStatus(reservation.id, 'confirmed')}
-                            disabled={reservation.status === 'confirmed'}
                             title="Confirm Reservation"
                           >
                             <Check className="h-4 w-4 text-green-500" />
@@ -218,7 +217,6 @@ const AdminReservations = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleUpdateStatus(reservation.id, 'cancelled')}
-                            disabled={reservation.status === 'cancelled'}
                             title="Cancel Reservation"
                           >
                             <X className="h-4 w-4 text-red-500" />
