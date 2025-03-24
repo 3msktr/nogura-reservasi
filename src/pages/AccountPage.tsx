@@ -55,7 +55,7 @@ const AccountPage = () => {
       form.reset({
         fullName: profile?.full_name || '',
         email: user?.email || '',
-        phoneNumber: profile?.phone_number || '',
+        phoneNumber: profile?.phone_number ? profile.phone_number.replace(/^\+62/, '') : '',
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
@@ -68,12 +68,17 @@ const AccountPage = () => {
     
     setIsLoading(true);
     try {
+      // Format phone number to include +62 prefix if it doesn't already have it
+      const formattedPhoneNumber = data.phoneNumber.startsWith('+62') 
+        ? data.phoneNumber 
+        : `+62${data.phoneNumber.replace(/^0+/, '')}`;
+      
       // Update profile information
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
           full_name: data.fullName,
-          phone_number: data.phoneNumber,
+          phone_number: formattedPhoneNumber,
         })
         .eq('id', user.id);
 
@@ -115,26 +120,6 @@ const AccountPage = () => {
     } catch (error: any) {
       console.error('Error updating account:', error);
       toast.error(error.message || 'Failed to update account');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    if (!user || !confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // In a real app, you would call a server function to handle deletion properly
-      // For this demo, we'll just sign the user out
-      await signOut();
-      toast.success('Account deleted successfully');
-      navigate('/');
-    } catch (error: any) {
-      console.error('Error deleting account:', error);
-      toast.error(error.message || 'Failed to delete account');
     } finally {
       setIsLoading(false);
     }
@@ -230,7 +215,17 @@ const AccountPage = () => {
                               Phone Number
                             </FormLabel>
                             <FormControl>
-                              <Input {...field} type="tel" placeholder="+1234567890" />
+                              <div className="relative">
+                                <div className="absolute left-3 top-3 flex items-center text-muted-foreground">
+                                  <span className="text-xs">+62</span>
+                                </div>
+                                <Input 
+                                  {...field} 
+                                  type="tel" 
+                                  className="pl-12"
+                                  placeholder="8123456789" 
+                                />
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -315,21 +310,6 @@ const AccountPage = () => {
                 </TabsContent>
               </Tabs>
             </CardContent>
-            <CardFooter className="flex flex-col items-start">
-              <div className="border-t w-full pt-4">
-                <p className="text-sm text-muted-foreground mb-4">
-                  Danger Zone
-                </p>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleDeleteAccount}
-                  disabled={isLoading}
-                >
-                  Delete Account
-                </Button>
-              </div>
-            </CardFooter>
           </Card>
         </div>
       </div>
