@@ -164,26 +164,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Check if this is the first user (for admin privileges)
       const isFirstUser = await checkIfFirstUser();
       
+      console.log("Starting Google sign-in process...");
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: `${window.location.origin}/`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
 
       if (error) {
+        console.error("Google OAuth error details:", error);
+        
+        // Provide more specific error messages based on the error code
+        if (error.message.includes("invalid_client")) {
+          toast.error("OAuth configuration error. Please verify your Google client ID and secret in Supabase.");
+        } else {
+          toast.error(error.message || 'Error signing in with Google');
+        }
+        
         throw error;
       }
 
       // Note: We can't directly set admin status here because the user isn't created yet
       // This happens after OAuth redirect, so we'll handle it in the auth state change listener
-      console.log('Google sign in initiated', data);
+      console.log('Google sign in initiated, redirect URL:', data.url);
       
       // User will be redirected to Google login
       // After successful authentication, they'll be redirected back to our app
       // and the onAuthStateChange event will trigger
     } catch (error: any) {
-      console.error('Google sign in error:', error);
+      console.error('Google sign in error details:', error);
       toast.error(error.message || 'Error signing in with Google');
       throw error;
     }
