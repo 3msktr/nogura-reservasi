@@ -10,6 +10,7 @@ type Profile = {
   id: string;
   full_name: string | null;
   is_admin: boolean;
+  phone_number: string | null;
 };
 
 type AuthContextType = {
