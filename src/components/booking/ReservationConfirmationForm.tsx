@@ -7,7 +7,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { PhoneIcon, User, AlertCircle } from 'lucide-react';
+import { PhoneIcon, User, AlertCircle, Calendar, Clock, Users } from 'lucide-react';
+import { Event, Session } from '@/lib/types';
+import { formatDate, formatTime } from '@/utils/dateUtils';
 
 // Form schema with validation
 const confirmationFormSchema = z.object({
@@ -24,11 +26,17 @@ export type ConfirmationFormValues = z.infer<typeof confirmationFormSchema>;
 interface ReservationConfirmationFormProps {
   onSubmit: (data: ConfirmationFormValues) => void;
   isLoading: boolean;
+  event?: Event | null;
+  selectedSessionData?: Session;
+  seatCount: number;
 }
 
 const ReservationConfirmationForm: React.FC<ReservationConfirmationFormProps> = ({
   onSubmit,
-  isLoading
+  isLoading,
+  event,
+  selectedSessionData,
+  seatCount
 }) => {
   const form = useForm<ConfirmationFormValues>({
     resolver: zodResolver(confirmationFormSchema),
@@ -41,6 +49,43 @@ const ReservationConfirmationForm: React.FC<ReservationConfirmationFormProps> = 
 
   return (
     <Form {...form}>
+      {/* Reservation Summary */}
+      {event && selectedSessionData && (
+        <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-border">
+          <h3 className="font-medium mb-2">Reservation Summary</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Event:</span>
+              </div>
+              <span className="font-medium">{event.name}</span>
+            </div>
+            <div className="flex justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Date:</span>
+              </div>
+              <span>{formatDate(event.date)}</span>
+            </div>
+            <div className="flex justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Time:</span>
+              </div>
+              <span>{formatTime(selectedSessionData.time)}</span>
+            </div>
+            <div className="flex justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Seats:</span>
+              </div>
+              <span>{seatCount}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}

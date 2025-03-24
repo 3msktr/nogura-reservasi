@@ -89,7 +89,10 @@ const BookingPage: React.FC = () => {
                     
                     <ReservationConfirmationForm 
                       onSubmit={handleConfirmReservation} 
-                      isLoading={isLoading} 
+                      isLoading={isLoading}
+                      event={event}
+                      selectedSessionData={selectedSessionData}
+                      seatCount={seatCount}
                     />
                     
                     <button 
