@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Eye, X, Check, Clock, Calendar, User, MessageSquare } from 'lucide-react';
+import { Eye, X, Check, Clock, Calendar, User, MessageSquare, Download, Filter } from 'lucide-react';
 import { formatDate, formatTime } from '@/utils/dateUtils';
 import {
   Dialog,
@@ -32,6 +32,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { format } from 'date-fns';
+import * as XLSX from 'xlsx';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface ExtendedReservation extends Reservation {
   userName?: string;
@@ -39,18 +43,32 @@ interface ExtendedReservation extends Reservation {
 
 const AdminReservations = () => {
   const [reservations, setReservations] = useState<ExtendedReservation[]>([]);
+  const [filteredReservations, setFilteredReservations] = useState<ExtendedReservation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showWhatsAppDialog, setShowWhatsAppDialog] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<ExtendedReservation | null>(null);
   const [whatsappMessage, setWhatsappMessage] = useState('');
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  });
+  const [showDateFilter, setShowDateFilter] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchReservations();
     fetchTemplates();
   }, []);
+
+  useEffect(() => {
+    if (dateRange.from || dateRange.to) {
+      filterReservationsByDate();
+    } else {
+      setFilteredReservations(reservations);
+    }
+  }, [dateRange, reservations]);
 
   const fetchTemplates = async () => {
     try {
@@ -123,12 +141,44 @@ const AdminReservations = () => {
       );
 
       setReservations(mappedReservations);
+      setFilteredReservations(mappedReservations);
     } catch (error) {
       console.error('Error fetching reservations:', error);
       toast.error('Failed to load reservations');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const filterReservationsByDate = () => {
+    if (!dateRange.from && !dateRange.to) {
+      setFilteredReservations(reservations);
+      return;
+    }
+
+    const filtered = reservations.filter(reservation => {
+      if (!reservation.event?.date) return false;
+      
+      const eventDate = new Date(reservation.event.date);
+      
+      if (dateRange.from && dateRange.to) {
+        return eventDate >= dateRange.from && eventDate <= dateRange.to;
+      } else if (dateRange.from) {
+        return eventDate >= dateRange.from;
+      } else if (dateRange.to) {
+        return eventDate <= dateRange.to;
+      }
+      
+      return true;
+    });
+    
+    setFilteredReservations(filtered);
+  };
+
+  const clearDateFilter = () => {
+    setDateRange({ from: undefined, to: undefined });
+    setFilteredReservations(reservations);
+    setShowDateFilter(false);
   };
 
   const handleUpdateStatus = async (reservationId: string, newStatus: 'confirmed' | 'cancelled') => {
@@ -259,16 +309,104 @@ The Event Team`;
     setShowWhatsAppDialog(false);
   };
 
+  const exportToExcel = () => {
+    try {
+      // Prepare data for export
+      const exportData = filteredReservations.map(reservation => ({
+        'Event': reservation.event?.name || 'Unknown Event',
+        'Date': reservation.event?.date ? formatDate(reservation.event.date) : 'Unknown Date',
+        'Time': reservation.session?.time ? formatTime(reservation.session.time) : 'Unknown Time',
+        'Status': reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1),
+        'User': reservation.userName,
+        'Contact Name': reservation.contactName || 'N/A',
+        'Phone': reservation.phoneNumber || 'N/A',
+        'Seats': reservation.numberOfSeats,
+        'Allergy Notes': reservation.allergyNotes || 'None',
+        'Reservation Date': new Date(reservation.createdAt).toLocaleDateString()
+      }));
+      
+      // Create worksheet
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      
+      // Create workbook and add the worksheet
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Reservations');
+      
+      // Generate Excel file
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const fileName = `Reservations_${today}.xlsx`;
+      
+      // Write and download
+      XLSX.writeFile(workbook, fileName);
+      
+      toast.success('Reservations exported successfully');
+    } catch (error) {
+      console.error('Error exporting reservations:', error);
+      toast.error('Failed to export reservations');
+    }
+  };
+
   return (
     <Layout>
       <div className="container py-20">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">All Reservations</h1>
-          <Button variant="outline" onClick={() => navigate('/admin/message-templates')}>
-            <MessageSquare className="mr-2 h-4 w-4" />
-            Manage Message Templates
-          </Button>
+          <div className="flex items-center gap-2">
+            <Popover open={showDateFilter} onOpenChange={setShowDateFilter}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Filter className="h-4 w-4" />
+                  Filter by Date
+                  {(dateRange.from || dateRange.to) && (
+                    <span className="ml-1 h-2 w-2 rounded-full bg-primary"></span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-4" align="end">
+                <div className="space-y-4">
+                  <h4 className="font-medium">Filter by Event Date</h4>
+                  <DateRangePicker
+                    date={dateRange}
+                    onDateChange={setDateRange}
+                  />
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" size="sm" onClick={clearDateFilter}>
+                      Clear
+                    </Button>
+                    <Button size="sm" onClick={() => setShowDateFilter(false)}>
+                      Apply
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            <Button variant="outline" onClick={exportToExcel} className="gap-2">
+              <Download className="h-4 w-4" />
+              Export to Excel
+            </Button>
+            
+            <Button variant="outline" onClick={() => navigate('/admin/message-templates')}>
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Manage Templates
+            </Button>
+          </div>
         </div>
+        
+        {(dateRange.from || dateRange.to) && (
+          <div className="mb-4 p-2 bg-muted rounded-md flex items-center justify-between">
+            <span className="text-sm">
+              Filtering: {dateRange.from ? formatDate(dateRange.from.toISOString()) : 'Any start date'} 
+              {' to '} 
+              {dateRange.to ? formatDate(dateRange.to.toISOString()) : 'Any end date'}
+              {' • '} 
+              {filteredReservations.length} results
+            </span>
+            <Button variant="ghost" size="sm" onClick={clearDateFilter}>
+              Clear filter
+            </Button>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="flex justify-center p-8">
@@ -289,14 +427,14 @@ The Event Team`;
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {reservations.length === 0 ? (
+                {filteredReservations.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                       No reservations found.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  reservations.map((reservation) => (
+                  filteredReservations.map((reservation) => (
                     <TableRow key={reservation.id}>
                       <TableCell>
                         <div className="flex items-center">
