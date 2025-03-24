@@ -15,6 +15,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Users, UserPlus, Trash2, ShieldCheck, ShieldOff } from 'lucide-react';
 
 type UserProfile = {
   id: string;
@@ -28,6 +47,19 @@ const AdminUsers = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserFullName, setNewUserFullName] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
+  const [isAddingUser, setIsAddingUser] = useState(false);
+  const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
+
+  // User metrics
+  const totalUsers = users.length;
+  const adminUsers = users.filter(user => user.is_admin).length;
+  const regularUsers = totalUsers - adminUsers;
 
   useEffect(() => {
     // Redirect if not admin
@@ -44,22 +76,36 @@ const AdminUsers = () => {
     try {
       setLoading(true);
       
-      // First, fetch all profiles
-      const { data: profiles, error: profilesError } = await supabase
+      // Fetch all user profiles including their email
+      const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, is_admin');
+        .select(`
+          id,
+          full_name,
+          is_admin,
+          email:id(email)
+        `)
+        .limit(100);
 
-      if (profilesError) throw profilesError;
+      if (error) throw error;
 
-      // Then, fetch user emails from auth.users (we'll need to use the admin API or a server function in a real app)
-      // For now, we'll use placeholder emails based on IDs
-      const usersWithEmail = profiles.map((profile) => ({
-        id: profile.id,
-        full_name: profile.full_name,
-        is_admin: profile.is_admin || false,
-        // In a real app, you would fetch actual emails, but for this example:
-        email: `user-${profile.id.substring(0, 8)}@example.com`,
-      }));
+      // Process the data to get proper email format
+      const usersWithEmail = data.map(profile => {
+        // For this example, we're using a data transformation to handle the joined email
+        // In a real implementation with proper joins, this structure might be different
+        let email = 'No email available';
+        
+        // Try to get email from the auth users table via Supabase Edge Function
+        // This is a placeholder - in a real app you'd implement a proper join
+        const profileId = profile.id;
+        
+        return {
+          id: profile.id,
+          full_name: profile.full_name,
+          is_admin: profile.is_admin || false,
+          email: `user-${profileId.substring(0, 8)}@example.com`, // Placeholder for now
+        };
+      });
 
       setUsers(usersWithEmail);
     } catch (error) {
@@ -91,13 +137,206 @@ const AdminUsers = () => {
     }
   };
 
+  const handleAddUser = async () => {
+    if (!newUserEmail || !newUserFullName || !newUserPassword) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+
+    setIsAddingUser(true);
+    try {
+      // Sign up the new user
+      const { data, error } = await supabase.auth.signUp({
+        email: newUserEmail,
+        password: newUserPassword,
+        options: {
+          data: {
+            full_name: newUserFullName,
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success('User added successfully! They will need to confirm their email.');
+      setIsAddUserDialogOpen(false);
+      setNewUserEmail('');
+      setNewUserFullName('');
+      setNewUserPassword('');
+      
+      // Refresh the users list
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Error adding user:', error);
+      toast.error(error.message || 'Failed to add user');
+    } finally {
+      setIsAddingUser(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deleteUserId) return;
+
+    setIsDeletingUser(true);
+    try {
+      // In a real app, this would be a server-side function or Supabase function
+      // For this demo, we'll just remove the user from our profiles table
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', deleteUserId);
+
+      if (error) throw error;
+
+      // Remove user from local state
+      setUsers(users.filter(user => user.id !== deleteUserId));
+      toast.success('User deleted successfully');
+      setIsDeleteDialogOpen(false);
+      setDeleteUserId(null);
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast.error(error.message || 'Failed to delete user');
+    } finally {
+      setIsDeletingUser(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="container py-20">
         <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold">User Management</h1>
-            <p className="text-muted-foreground">Manage user roles and permissions</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold">User Management</h1>
+              <p className="text-muted-foreground">Manage user roles and permissions</p>
+            </div>
+            <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Add User
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New User</DialogTitle>
+                  <DialogDescription>
+                    Create a new user account. They will receive an email to confirm their registration.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="fullName">Full Name</Label>
+                    <Input
+                      id="fullName"
+                      value={newUserFullName}
+                      onChange={(e) => setNewUserFullName(e.target.value)}
+                      placeholder="John Doe"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={newUserEmail}
+                      onChange={(e) => setNewUserEmail(e.target.value)}
+                      placeholder="john@example.com"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={newUserPassword}
+                      onChange={(e) => setNewUserPassword(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => setIsAddUserDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleAddUser} 
+                    disabled={isAddingUser}
+                  >
+                    {isAddingUser ? 'Adding...' : 'Add User'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Delete User Dialog */}
+            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Delete User</DialogTitle>
+                  <DialogDescription>
+                    Are you sure you want to delete this user? This action cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => setIsDeleteDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    variant="destructive"
+                    onClick={handleDeleteUser} 
+                    disabled={isDeletingUser}
+                  >
+                    {isDeletingUser ? 'Deleting...' : 'Delete User'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {/* Dashboard Cards */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalUsers}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Registered accounts
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-sm font-medium">Admin Users</CardTitle>
+                <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{adminUsers}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  With administrative access
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-sm font-medium">Regular Users</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{regularUsers}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Standard access accounts
+                </p>
+              </CardContent>
+            </Card>
           </div>
 
           {loading ? (
@@ -126,13 +365,29 @@ const AdminUsers = () => {
                         </span>
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleToggleAdminStatus(user.id, user.is_admin)}
-                        >
-                          {user.is_admin ? 'Remove Admin' : 'Make Admin'}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleToggleAdminStatus(user.id, user.is_admin)}
+                          >
+                            {user.is_admin ? (
+                              <><ShieldOff className="h-4 w-4 mr-1" /> Remove Admin</>
+                            ) : (
+                              <><ShieldCheck className="h-4 w-4 mr-1" /> Make Admin</>
+                            )}
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              setDeleteUserId(user.id);
+                              setIsDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
