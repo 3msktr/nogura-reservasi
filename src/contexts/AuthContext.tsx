@@ -36,6 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
+        console.log('Auth state changed:', event, currentSession?.user?.id);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
@@ -74,6 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -81,12 +83,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (error) {
+        console.error('Error fetching profile:', error);
         throw error;
       }
 
+      console.log('Profile data retrieved:', data);
       setProfile(data as Profile);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Error in fetchProfile:', error);
       setProfile(null);
     }
   };
@@ -95,6 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Check if this is the first user
       const isFirstUser = await checkIfFirstUser();
+      console.log('Is first user:', isFirstUser);
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -125,18 +130,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('Attempting to sign in:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Sign in error:', error);
         throw error;
+      }
+
+      console.log('Sign in successful for user:', data.user?.id);
+      
+      // Always fetch profile after successful sign in to ensure we have the latest data
+      if (data.user) {
+        await fetchProfile(data.user.id);
       }
 
       toast.success('Logged in successfully');
       navigate('/');
     } catch (error: any) {
+      console.error('Login error details:', error);
       toast.error(error.message || 'Invalid login credentials');
       throw error;
     }

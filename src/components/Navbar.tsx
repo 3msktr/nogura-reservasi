@@ -1,20 +1,14 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 
-interface NavbarProps {
-  isLoggedIn: boolean;
-  isAdmin?: boolean;
-  onLogout?: () => void;
-}
+const Navbar: React.FC = () => {
+  const { user, isAdmin, signOut } = useAuth();
+  const isLoggedIn = !!user;
 
-const Navbar: React.FC<NavbarProps> = ({ 
-  isLoggedIn = false, 
-  isAdmin = false,
-  onLogout = () => {} 
-}) => {
   return (
     <header className="w-full fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
       <div className="container flex h-16 items-center justify-between">
@@ -46,10 +40,15 @@ const Navbar: React.FC<NavbarProps> = ({
               <Link to="/account" className="p-2 rounded-full hover:bg-secondary transition-colors" title="Manage Account">
                 <User size={18} />
               </Link>
+              {isAdmin && (
+                <Link to="/admin/users" className="p-2 rounded-full hover:bg-secondary transition-colors" title="Manage Users">
+                  <UserCog size={18} />
+                </Link>
+              )}
               <Button 
                 variant="ghost" 
                 size="icon"
-                onClick={onLogout}
+                onClick={signOut}
                 className="rounded-full"
                 title="Log Out"
               >

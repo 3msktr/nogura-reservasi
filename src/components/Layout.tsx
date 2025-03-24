@@ -1,25 +1,25 @@
+
 import React from 'react';
 import Navbar from './Navbar';
-import { useAuth } from '@/contexts/AuthContext';
 
-export default function Layout({ children }: { children: React.ReactNode }) {
-  const { user, signOut, isAdmin } = useAuth();
-  
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar 
-        isLoggedIn={!!user} 
-        isAdmin={isAdmin}
-        onLogout={signOut}
-      />
+      <Navbar />
       <main className="flex-1 pt-16">
         {children}
       </main>
-      <footer className="bg-background border-t py-6">
+      <footer className="bg-secondary/50 py-6">
         <div className="container text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Nogura. All rights reserved.
+          <p>© {new Date().getFullYear()} NOGURA. All rights reserved.</p>
         </div>
       </footer>
     </div>
   );
-}
+};
+
+export default Layout;

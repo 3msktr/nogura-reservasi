@@ -5,6 +5,10 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAdmin, isLoading } = useAuth();
+  
+  console.log('AdminRoute - User:', user?.id);
+  console.log('AdminRoute - Is Admin:', isAdmin);
+  console.log('AdminRoute - Is Loading:', isLoading);
 
   if (isLoading) {
     return (
@@ -15,13 +19,16 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }
 
   if (!user) {
+    console.log('AdminRoute - Redirecting to login (not authenticated)');
     return <Navigate to="/login" replace />;
   }
 
   if (!isAdmin) {
+    console.log('AdminRoute - Redirecting to home (not admin)');
     return <Navigate to="/" replace />;
   }
 
+  console.log('AdminRoute - Allowing access to admin page');
   return <>{children}</>;
 };
 

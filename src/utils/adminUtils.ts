@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const setUserAdminStatus = async (userId: string, isAdmin: boolean): Promise<boolean> => {
   try {
+    console.log(`Setting admin status for user ${userId} to ${isAdmin}`);
     const { error } = await supabase.rpc('set_admin_status', {
       user_id: userId,
       admin_status: isAdmin
@@ -17,6 +18,7 @@ export const setUserAdminStatus = async (userId: string, isAdmin: boolean): Prom
       return false;
     }
 
+    console.log(`Admin status set successfully for user ${userId}`);
     return true;
   } catch (err) {
     console.error('Unexpected error setting admin status:', err);
@@ -30,6 +32,7 @@ export const setUserAdminStatus = async (userId: string, isAdmin: boolean): Prom
  */
 export const checkIfFirstUser = async (): Promise<boolean> => {
   try {
+    console.log('Checking if this is the first user...');
     const { count, error } = await supabase
       .from('profiles')
       .select('*', { count: 'exact', head: true });
@@ -39,6 +42,7 @@ export const checkIfFirstUser = async (): Promise<boolean> => {
       return false;
     }
     
+    console.log(`Found ${count} existing users`);
     return count === 0;
   } catch (err) {
     console.error('Unexpected error checking user count:', err);
