@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -12,25 +12,32 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { signIn, user } = useAuth();
+
+  useEffect(() => {
+    // Redirect if user is already logged in
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      return;
+    }
+
     setIsLoading(true);
 
-    // Mock login - normally would check credentials with backend
-    setTimeout(() => {
-      // For demo, we'll just make admin@nogura.com an admin account
-      if (email === 'admin@nogura.com' && password === 'password') {
-        toast.success('Logged in as admin');
-        navigate('/admin');
-      } else if (email && password) {
-        toast.success('Logged in successfully');
-        navigate('/');
-      } else {
-        toast.error('Invalid credentials');
-      }
+    try {
+      await signIn(email, password);
+      // Navigation is handled in the signIn function
+    } catch (error) {
+      console.error('Login error:', error);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -103,14 +110,6 @@ const Login: React.FC = () => {
                 </Link>
               </div>
             </form>
-
-            <div className="mt-8 pt-6 border-t border-border">
-              <div className="text-center text-xs text-muted-foreground">
-                <p>For demo, use:</p>
-                <p className="mt-1">Email: admin@nogura.com</p>
-                <p>Password: password</p>
-              </div>
-            </div>
           </div>
         </div>
       </div>

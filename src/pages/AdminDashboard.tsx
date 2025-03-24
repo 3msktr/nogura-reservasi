@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, Edit, Plus, Trash, Users } from 'lucide-react';
@@ -8,7 +7,6 @@ import Layout from '@/components/Layout';
 import { Event } from '@/lib/types';
 import { formatDate, formatTime, shouldEventBeOpen } from '@/utils/dateUtils';
 
-// Mock events data
 const mockEvents: Event[] = [
   {
     id: "1",
@@ -75,7 +73,6 @@ const AdminDashboard: React.FC = () => {
   const [events, setEvents] = useState<Event[]>(mockEvents);
   const navigate = useNavigate();
   
-  // Check and update event status automatically
   useEffect(() => {
     const intervalId = setInterval(() => {
       setEvents(prevEvents => 
@@ -83,7 +80,6 @@ const AdminDashboard: React.FC = () => {
           const shouldBeOpen = shouldEventBeOpen(event.openingTime, event.closingTime);
           
           if (event.isOpen !== shouldBeOpen) {
-            // Only toast if the status is changing
             if (shouldBeOpen) {
               toast.success(`Event "${event.name}" has automatically opened for reservations`);
             } else {
@@ -94,9 +90,8 @@ const AdminDashboard: React.FC = () => {
           return event;
         })
       );
-    }, 60000); // Check every minute
+    }, 60000);
     
-    // Initial check when component mounts
     setEvents(prevEvents => 
       prevEvents.map(event => {
         const shouldBeOpen = shouldEventBeOpen(event.openingTime, event.closingTime);
@@ -129,7 +124,7 @@ const AdminDashboard: React.FC = () => {
   };
   
   return (
-    <Layout isLoggedIn={true} isAdmin={true}>
+    <Layout>
       <div className="container py-12 md:py-20">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Admin Dashboard</h1>

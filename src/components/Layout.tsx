@@ -1,23 +1,22 @@
 
 import React from 'react';
 import Navbar from './Navbar';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
-  isLoggedIn?: boolean;
-  isAdmin?: boolean;
-  onLogout?: () => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ 
-  children, 
-  isLoggedIn = false,
-  isAdmin = false,
-  onLogout = () => {}
-}) => {
+const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const { user, isAdmin, signOut } = useAuth();
+  
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Navbar isLoggedIn={isLoggedIn} isAdmin={isAdmin} onLogout={onLogout} />
+      <Navbar 
+        isLoggedIn={!!user} 
+        isAdmin={isAdmin} 
+        onLogout={signOut} 
+      />
       <main className="flex-1 pt-16">
         {children}
       </main>
