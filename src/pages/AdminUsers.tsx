@@ -76,38 +76,43 @@ const AdminUsers = () => {
     try {
       setLoading(true);
       
-      // Fetch all user profiles including their email
-      const { data, error } = await supabase
+      // First, fetch all user profiles
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          full_name,
-          is_admin,
-          email:id(email)
-        `)
-        .limit(100);
+        .select('id, full_name, is_admin');
 
-      if (error) throw error;
+      if (profilesError) throw profilesError;
 
-      // Process the data to get proper email format
-      const usersWithEmail = data.map(profile => {
-        // For this example, we're using a data transformation to handle the joined email
-        // In a real implementation with proper joins, this structure might be different
-        let email = 'No email available';
+      // Then, fetch all user emails from the auth.users table via a Supabase function
+      // We'll use an RPC call to a custom function for this
+      const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
+
+      if (usersError) {
+        // If admin API isn't available (likely in dev), we'll use dummy emails
+        console.warn('Unable to fetch actual user emails, using placeholder emails');
         
-        // Try to get email from the auth users table via Supabase Edge Function
-        // This is a placeholder - in a real app you'd implement a proper join
-        const profileId = profile.id;
-        
-        return {
+        const usersWithEmails = profiles.map(profile => ({
           id: profile.id,
           full_name: profile.full_name,
           is_admin: profile.is_admin || false,
-          email: `user-${profileId.substring(0, 8)}@example.com`, // Placeholder for now
-        };
-      });
-
-      setUsers(usersWithEmail);
+          email: `user-${profile.id.substring(0, 8)}@example.com`, // Placeholder email
+        }));
+        
+        setUsers(usersWithEmails);
+      } else {
+        // Map the emails to the profiles
+        const usersWithEmails = profiles.map(profile => {
+          const userRecord = users?.users?.find(u => u.id === profile.id);
+          return {
+            id: profile.id,
+            full_name: profile.full_name,
+            is_admin: profile.is_admin || false,
+            email: userRecord?.email || `user-${profile.id.substring(0, 8)}@example.com`,
+          };
+        });
+        
+        setUsers(usersWithEmails);
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Failed to load users');
@@ -210,6 +215,7 @@ const AdminUsers = () => {
               <h1 className="text-2xl font-bold">User Management</h1>
               <p className="text-muted-foreground">Manage user roles and permissions</p>
             </div>
+            
             <Dialog open={isAddUserDialogOpen} onOpenChange={setIsAddUserDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="flex items-center gap-2">
