@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -36,6 +35,7 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DateRange } from "react-day-picker";
 
 interface ExtendedReservation extends Reservation {
   userName?: string;
@@ -50,7 +50,7 @@ const AdminReservations = () => {
   const [whatsappMessage, setWhatsappMessage] = useState('');
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
-  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: undefined,
     to: undefined,
   });
@@ -311,7 +311,6 @@ The Event Team`;
 
   const exportToExcel = () => {
     try {
-      // Prepare data for export
       const exportData = filteredReservations.map(reservation => ({
         'Event': reservation.event?.name || 'Unknown Event',
         'Date': reservation.event?.date ? formatDate(reservation.event.date) : 'Unknown Date',
@@ -325,18 +324,14 @@ The Event Team`;
         'Reservation Date': new Date(reservation.createdAt).toLocaleDateString()
       }));
       
-      // Create worksheet
       const worksheet = XLSX.utils.json_to_sheet(exportData);
       
-      // Create workbook and add the worksheet
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Reservations');
       
-      // Generate Excel file
       const today = format(new Date(), 'yyyy-MM-dd');
       const fileName = `Reservations_${today}.xlsx`;
       
-      // Write and download
       XLSX.writeFile(workbook, fileName);
       
       toast.success('Reservations exported successfully');
@@ -367,7 +362,7 @@ The Event Team`;
                   <h4 className="font-medium">Filter by Event Date</h4>
                   <DateRangePicker
                     date={dateRange}
-                    onDateChange={setDateRange}
+                    onDateChange={(date) => setDateRange(date)}
                   />
                   <div className="flex justify-end gap-2 pt-2">
                     <Button variant="outline" size="sm" onClick={clearDateFilter}>
