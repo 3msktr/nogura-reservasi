@@ -6,6 +6,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
+import { checkIfFirstUser } from '@/utils/adminUtils';
 
 const SignUp: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +15,7 @@ const SignUp: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFirstUser, setIsFirstUser] = useState(false);
   const navigate = useNavigate();
   const { signUp, user } = useAuth();
 
@@ -22,6 +24,14 @@ const SignUp: React.FC = () => {
     if (user) {
       navigate('/');
     }
+    
+    // Check if this is the first user to sign up
+    const checkFirstUser = async () => {
+      const isFirst = await checkIfFirstUser();
+      setIsFirstUser(isFirst);
+    };
+    
+    checkFirstUser();
   }, [user, navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -36,6 +46,13 @@ const SignUp: React.FC = () => {
 
     try {
       await signUp(email, password, fullName);
+      
+      if (isFirstUser) {
+        toast.success('You have been registered as the first admin user');
+      } else {
+        toast.success('Sign up successful! Please check your email to confirm your account.');
+      }
+      
       // Navigation is handled in the signUp function
     } catch (error) {
       console.error('Error signing up:', error);
@@ -52,6 +69,11 @@ const SignUp: React.FC = () => {
             <div className="text-center mb-8">
               <h1 className="text-2xl font-bold">Create an Account</h1>
               <p className="text-muted-foreground mt-2">Join Nogura to start booking events</p>
+              {isFirstUser && (
+                <div className="mt-2 p-2 bg-green-50 text-green-700 rounded-md text-sm">
+                  You will be registered as the first admin user
+                </div>
+              )}
             </div>
 
             <form onSubmit={handleSignUp} className="space-y-6">

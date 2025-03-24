@@ -23,3 +23,25 @@ export const setUserAdminStatus = async (userId: string, isAdmin: boolean): Prom
     return false;
   }
 };
+
+/**
+ * Check if any users exist in the system
+ * Used to determine if the first user should be made an admin
+ */
+export const checkIfFirstUser = async (): Promise<boolean> => {
+  try {
+    const { count, error } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true });
+    
+    if (error) {
+      console.error('Error checking user count:', error);
+      return false;
+    }
+    
+    return count === 0;
+  } catch (err) {
+    console.error('Unexpected error checking user count:', err);
+    return false;
+  }
+};

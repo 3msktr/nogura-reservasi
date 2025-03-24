@@ -4,6 +4,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { checkIfFirstUser, setUserAdminStatus } from '@/utils/adminUtils';
 
 type Profile = {
   id: string;
@@ -92,6 +93,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
+      // Check if this is the first user
+      const isFirstUser = await checkIfFirstUser();
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -104,6 +108,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         throw error;
+      }
+
+      // If this is the first user, make them an admin
+      if (isFirstUser && data.user) {
+        await setUserAdminStatus(data.user.id, true);
       }
 
       toast.success('Sign up successful! Please check your email to confirm your account.');
