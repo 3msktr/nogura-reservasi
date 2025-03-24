@@ -11,7 +11,7 @@ export type Database = {
     Tables: {
       events: {
         Row: {
-          closingtime: string
+          closingtime: string | null
           created_at: string
           date: string
           description: string
@@ -22,7 +22,7 @@ export type Database = {
           openingtime: string
         }
         Insert: {
-          closingtime: string
+          closingtime?: string | null
           created_at?: string
           date: string
           description: string
@@ -33,7 +33,7 @@ export type Database = {
           openingtime: string
         }
         Update: {
-          closingtime?: string
+          closingtime?: string | null
           created_at?: string
           date?: string
           description?: string

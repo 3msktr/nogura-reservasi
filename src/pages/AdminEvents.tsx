@@ -133,6 +133,8 @@ const AdminEvents = () => {
         description: description || '',
         date,
         openingtime: openingTime || new Date().toISOString(),
+        // Add closingtime with default value (now)
+        closingtime: new Date().toISOString(),
         isopen: isOpen !== undefined ? isOpen : false,
         maxreservationsperuser: maxReservationsPerUser || 4
       };
