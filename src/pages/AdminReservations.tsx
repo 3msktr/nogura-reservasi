@@ -25,9 +25,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ExtendedReservation extends Reservation {
   userName?: string;
+}
+
+interface MessageTemplate {
+  id: string;
+  name: string;
+  content: string;
 }
 
 const AdminReservations = () => {
@@ -36,11 +49,28 @@ const AdminReservations = () => {
   const [showWhatsAppDialog, setShowWhatsAppDialog] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<ExtendedReservation | null>(null);
   const [whatsappMessage, setWhatsappMessage] = useState('');
+  const [templates, setTemplates] = useState<MessageTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchReservations();
+    fetchTemplates();
   }, []);
+
+  const fetchTemplates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('message_templates')
+        .select('id, name, content')
+        .order('name');
+
+      if (error) throw error;
+      setTemplates(data || []);
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+    }
+  };
 
   const fetchReservations = async () => {
     try {
@@ -158,10 +188,11 @@ const AdminReservations = () => {
   const handleWhatsAppClick = (reservation: ExtendedReservation) => {
     setSelectedReservation(reservation);
     
-    // Generate the WhatsApp message template
+    // Generate the WhatsApp message from template or default
     const message = generateWhatsAppTemplate(reservation);
     
     setWhatsappMessage(message);
+    setSelectedTemplateId('');
     setShowWhatsAppDialog(true);
   };
 
@@ -184,6 +215,31 @@ Please arrive 15 minutes before your scheduled time. We look forward to seeing y
 
 Best regards,
 The Event Team`;
+  };
+
+  const handleTemplateChange = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    
+    if (!selectedReservation) return;
+    
+    const template = templates.find(t => t.id === templateId);
+    if (!template) return;
+    
+    // Replace placeholders with actual values
+    const eventName = selectedReservation.event?.name || 'our event';
+    const eventDate = selectedReservation.event?.date ? formatDate(selectedReservation.event.date) : 'the scheduled date';
+    const sessionTime = selectedReservation.session?.time ? formatTime(selectedReservation.session.time) : 'the scheduled time';
+    const seats = selectedReservation.numberOfSeats;
+    const guestName = selectedReservation.contactName || 'Guest';
+    
+    let message = template.content;
+    message = message.replace(/\{guestName\}/g, guestName);
+    message = message.replace(/\{eventName\}/g, eventName);
+    message = message.replace(/\{eventDate\}/g, eventDate);
+    message = message.replace(/\{sessionTime\}/g, sessionTime);
+    message = message.replace(/\{seats\}/g, seats.toString());
+    
+    setWhatsappMessage(message);
   };
 
   const handleSendWhatsApp = () => {
@@ -221,6 +277,10 @@ The Event Team`;
       <div className="container py-20">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">All Reservations</h1>
+          <Button variant="outline" onClick={() => navigate('/admin/message-templates')}>
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Manage Message Templates
+          </Button>
         </div>
 
         {isLoading ? (
@@ -345,11 +405,33 @@ The Event Team`;
           <DialogHeader>
             <DialogTitle>WhatsApp Confirmation Message</DialogTitle>
             <DialogDescription>
-              Customize the message below and click "Open in WhatsApp" to send it.
+              Choose a template or customize the message before sending.
             </DialogDescription>
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
+            <div className="mb-4">
+              <label className="text-sm font-medium mb-2 block">
+                Choose Template
+              </label>
+              <Select value={selectedTemplateId} onValueChange={handleTemplateChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.length === 0 ? (
+                    <SelectItem value="none" disabled>No templates available</SelectItem>
+                  ) : (
+                    templates.map(template => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            
             <Textarea 
               value={whatsappMessage} 
               onChange={(e) => setWhatsappMessage(e.target.value)}

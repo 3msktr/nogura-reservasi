@@ -12,6 +12,7 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminEvents from "./pages/AdminEvents";
 import AdminSessions from "./pages/AdminSessions";
 import AdminReservations from "./pages/AdminReservations";
+import AdminMessageTemplates from "./pages/AdminMessageTemplates";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
@@ -20,7 +21,6 @@ import EventDetailPage from "./pages/EventDetailPage";
 import AccountPage from "./pages/AccountPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
-import Layout from "./components/Layout";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +58,11 @@ const App = () => (
             <Route path="/admin/reservations" element={
               <AdminRoute>
                 <AdminReservations />
+              </AdminRoute>
+            } />
+            <Route path="/admin/message-templates" element={
+              <AdminRoute>
+                <AdminMessageTemplates />
               </AdminRoute>
             } />
             <Route path="/login" element={<Login />} />
