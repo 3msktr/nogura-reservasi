@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { User, LogOut, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import ThemeToggle from './ThemeToggle';
 
 const Navbar: React.FC = () => {
   const { user, isAdmin, signOut } = useAuth();
@@ -36,8 +35,6 @@ const Navbar: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-4">
-          <ThemeToggle />
-          
           {isLoggedIn ? (
             <div className="flex items-center gap-4">
               <Link to="/account" className="p-2 rounded-full hover:bg-secondary transition-colors" title="Manage Account">
