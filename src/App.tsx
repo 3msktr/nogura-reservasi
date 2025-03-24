@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import BookingPage from "./pages/BookingPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
 import MyReservationsPage from "./pages/MyReservationsPage";
 import EventDetailPage from "./pages/EventDetailPage";
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/event/:eventId" element={<EventDetailPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
           <Route path="/my-reservations" element={<MyReservationsPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
