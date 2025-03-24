@@ -12,17 +12,26 @@ import UserSearchBar from '@/components/admin/UserSearchBar';
 import UsersTable from '@/components/admin/UsersTable';
 import AddUserDialog from '@/components/admin/AddUserDialog';
 import DeleteUserDialog from '@/components/admin/DeleteUserDialog';
+import UsersPagination from '@/components/admin/UsersPagination';
+
+// Number of users to display per page
+const USERS_PER_PAGE = 10;
 
 const AdminUsers = () => {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserProfile[]>([]);
+  const [paginatedUsers, setPaginatedUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   // User metrics
   const totalUsers = filteredUsers.length;
@@ -53,7 +62,25 @@ const AdminUsers = () => {
       );
       setFilteredUsers(filtered);
     }
+    // Reset to first page when search query changes
+    setCurrentPage(1);
   }, [searchQuery, users]);
+
+  // Update paginated users when filtered users or current page changes
+  useEffect(() => {
+    const totalFilteredPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
+    setTotalPages(totalFilteredPages || 1);
+    
+    // Ensure current page is valid
+    if (currentPage > totalFilteredPages && totalFilteredPages > 0) {
+      setCurrentPage(totalFilteredPages);
+      return;
+    }
+    
+    const startIndex = (currentPage - 1) * USERS_PER_PAGE;
+    const endIndex = startIndex + USERS_PER_PAGE;
+    setPaginatedUsers(filteredUsers.slice(startIndex, endIndex));
+  }, [filteredUsers, currentPage]);
 
   const loadUsers = async () => {
     try {
@@ -67,6 +94,15 @@ const AdminUsers = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to top of user table for better UX
+    window.scrollTo({
+      top: document.getElementById('users-table')?.offsetTop || 0,
+      behavior: 'smooth',
+    });
   };
 
   const handleToggleAdminStatus = async (userId: string, currentStatus: boolean) => {
@@ -111,7 +147,7 @@ const AdminUsers = () => {
       // Remove user from local state
       const updatedUsers = users.filter(user => user.id !== deleteUserId);
       setUsers(updatedUsers);
-      setFilteredUsers(updatedUsers);
+      setFilteredUsers(prevFiltered => prevFiltered.filter(user => user.id !== deleteUserId));
       
       toast.success('User deleted successfully');
       setIsDeleteDialogOpen(false);
@@ -167,11 +203,31 @@ const AdminUsers = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
             </div>
           ) : (
-            <UsersTable 
-              users={filteredUsers}
-              onToggleAdminStatus={handleToggleAdminStatus}
-              onDeleteUser={openDeleteDialog}
-            />
+            <div id="users-table">
+              <UsersTable 
+                users={paginatedUsers}
+                onToggleAdminStatus={handleToggleAdminStatus}
+                onDeleteUser={openDeleteDialog}
+              />
+              
+              {/* Pagination */}
+              <UsersPagination 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+              
+              {/* Pagination Info */}
+              <div className="text-sm text-muted-foreground text-center mt-2">
+                {filteredUsers.length > 0 ? (
+                  <>
+                    Showing {(currentPage - 1) * USERS_PER_PAGE + 1} to {Math.min(currentPage * USERS_PER_PAGE, filteredUsers.length)} of {filteredUsers.length} users
+                  </>
+                ) : (
+                  <p>No users found</p>
+                )}
+              </div>
+            </div>
           )}
         </div>
       </div>
