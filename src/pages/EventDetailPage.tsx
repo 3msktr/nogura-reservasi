@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import CountdownTimer from '@/components/CountdownTimer';
 import { Event } from '@/lib/types';
-import { formatDate, formatTime, shouldEventBeOpen } from '@/utils/dateUtils';
+import { formatDate, formatTime, shouldEventBeOpen, isValidDate } from '@/utils/dateUtils';
 import { getEventById } from '@/services/eventService';
+import { toast } from 'sonner';
 
 const EventDetailPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -18,9 +19,21 @@ const EventDetailPage: React.FC = () => {
     const fetchEvent = async () => {
       if (eventId) {
         setIsLoading(true);
-        const data = await getEventById(eventId);
-        setEvent(data);
-        setIsLoading(false);
+        try {
+          const data = await getEventById(eventId);
+          setEvent(data);
+          
+          // Validate opening and closing times
+          if (data && (!isValidDate(data.openingTime) || !isValidDate(data.closingTime))) {
+            console.error('Invalid date values in event:', data);
+            toast.error('There was an issue with the event dates. Please contact support.');
+          }
+        } catch (error) {
+          console.error('Error fetching event:', error);
+          toast.error('Failed to load event details');
+        } finally {
+          setIsLoading(false);
+        }
       }
     };
     
@@ -56,6 +69,10 @@ const EventDetailPage: React.FC = () => {
   const isOpen = event ? shouldEventBeOpen(event.openingTime, event.closingTime) : false;
   const totalSeats = event?.sessions.reduce((acc, session) => acc + session.totalSeats, 0) || 0;
   const availableSeats = event?.sessions.reduce((acc, session) => acc + session.availableSeats, 0) || 0;
+  
+  // Log to debug countdown timer issues
+  console.log('Event opening time:', event.openingTime);
+  console.log('Is valid date:', isValidDate(event.openingTime));
   
   return (
     <Layout>
@@ -112,7 +129,20 @@ const EventDetailPage: React.FC = () => {
                 <div className="mt-8 bg-secondary rounded-xl p-6">
                   <h3 className="text-lg font-medium mb-4 text-center">Reservations opening soon</h3>
                   <div className="mb-6">
-                    <CountdownTimer targetDate={event.openingTime} />
+                    {isValidDate(event.openingTime) ? (
+                      <CountdownTimer 
+                        targetDate={event.openingTime} 
+                        onComplete={() => {
+                          toast.success("Reservations are now open!");
+                          // Force a re-render to update the isOpen state
+                          setEvent({...event});
+                        }}
+                      />
+                    ) : (
+                      <div className="text-center text-sm text-muted-foreground">
+                        Opening time information is unavailable.
+                      </div>
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground text-center">
                     Reservations for this event will open on {formatDate(event.openingTime)} at {formatTime(event.openingTime)}

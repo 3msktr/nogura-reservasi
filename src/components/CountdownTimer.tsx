@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { calculateTimeRemaining } from '@/utils/dateUtils';
+import { calculateTimeRemaining, isValidDate } from '@/utils/dateUtils';
 
 interface CountdownTimerProps {
   targetDate: string;
@@ -12,8 +12,17 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
   onComplete 
 }) => {
   const [timeRemaining, setTimeRemaining] = useState(calculateTimeRemaining(targetDate));
+  const [isValid, setIsValid] = useState(true);
   
   useEffect(() => {
+    // Check if the target date is valid
+    if (!isValidDate(targetDate)) {
+      console.error('Invalid target date provided to CountdownTimer:', targetDate);
+      setIsValid(false);
+      return;
+    }
+    
+    setIsValid(true);
     const timer = setInterval(() => {
       const remaining = calculateTimeRemaining(targetDate);
       setTimeRemaining(remaining);
@@ -24,12 +33,21 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
       }
     }, 1000);
     
+    // Cleanup the interval when component unmounts or targetDate changes
     return () => clearInterval(timer);
   }, [targetDate, onComplete]);
   
   const padWithZero = (num: number) => {
     return num.toString().padStart(2, '0');
   };
+  
+  if (!isValid) {
+    return (
+      <div className="w-full max-w-md mx-auto text-center">
+        <p className="text-red-500">Invalid countdown date</p>
+      </div>
+    );
+  }
   
   return (
     <div className="w-full max-w-md mx-auto">

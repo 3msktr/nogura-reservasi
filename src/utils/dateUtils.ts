@@ -1,3 +1,4 @@
+
 export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('en-US', {
@@ -65,10 +66,17 @@ export const isEventOpen = (openingTime: string, closingTime: string): boolean =
   return now >= opening && now <= closing;
 };
 
+// Renamed function to avoid duplicate
 export const shouldEventBeOpen = (openingTime: string, closingTime: string): boolean => {
   const now = new Date();
   const opening = new Date(openingTime);
   const closing = new Date(closingTime);
   
   return now >= opening && now <= closing;
+};
+
+// Ensure dates are valid
+export const isValidDate = (dateString: string): boolean => {
+  const date = new Date(dateString);
+  return !isNaN(date.getTime());
 };
