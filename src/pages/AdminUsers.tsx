@@ -104,51 +104,78 @@ const AdminUsers = () => {
     try {
       setLoading(true);
       
-      // First, fetch all user profiles
+      // First, fetch all user profiles with their data
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, full_name, phone_number, is_admin');
 
       if (profilesError) throw profilesError;
 
-      // Then, fetch all user emails from the auth.users table via Supabase admin API
-      const { data: adminResponse, error: usersError } = await supabase.auth.admin.listUsers() as { 
+      // Then, attempt to fetch all user emails from the auth.users table via Supabase admin API
+      // This will fail if not running in a Supabase Edge Function with admin rights
+      const { data: authData, error: authError } = await supabase.auth.admin.listUsers() as { 
         data: AdminUsersResponse;
         error: Error | null;
       };
-
-      if (usersError) {
-        // If admin API isn't available (likely in dev), we'll use dummy emails
-        console.warn('Unable to fetch actual user emails, using placeholder emails');
+      
+      let userEmails: Record<string, string> = {};
+      
+      if (authError || !authData?.users) {
+        console.warn('Unable to fetch actual user emails via admin API. Using alternative method.');
         
-        const usersWithEmails = profiles.map(profile => ({
-          id: profile.id,
-          full_name: profile.full_name,
-          phone_number: profile.phone_number,
-          is_admin: profile.is_admin || false,
-          email: `user-${profile.id.substring(0, 8)}@example.com`, // Placeholder email
-        }));
+        // Alternative: Fetch email for the current authenticated user only
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          userEmails[user.id] = user.email || '';
+        }
         
-        setUsers(usersWithEmails);
-        setFilteredUsers(usersWithEmails);
-      } else {
-        // Map the emails to the profiles
-        const adminUsers = adminResponse?.users || [];
-        
-        const usersWithEmails = profiles.map(profile => {
-          const userRecord = adminUsers.find(u => u.id === profile.id);
-          return {
-            id: profile.id,
-            full_name: profile.full_name,
-            phone_number: profile.phone_number,
-            is_admin: profile.is_admin || false,
-            email: userRecord?.email || `user-${profile.id.substring(0, 8)}@example.com`,
-          };
+        // For other users, we'll try to fetch their emails individually
+        const authUserPromises = profiles.map(async (profile) => {
+          // Skip if we already have this user's email (current user)
+          if (userEmails[profile.id]) return;
+          
+          try {
+            // Use a public function to get user data if available
+            // Note: This might not work depending on your Supabase setup
+            const { data } = await supabase
+              .from('profiles')
+              .select('id, email')
+              .eq('id', profile.id)
+              .single();
+              
+            if (data?.email) {
+              userEmails[profile.id] = data.email;
+            } else {
+              // Fallback to placeholder emails if no real emails are available
+              userEmails[profile.id] = `user-${profile.id.substring(0, 8)}@example.com`;
+            }
+          } catch (err) {
+            // Fallback to placeholder
+            userEmails[profile.id] = `user-${profile.id.substring(0, 8)}@example.com`;
+          }
         });
         
-        setUsers(usersWithEmails);
-        setFilteredUsers(usersWithEmails);
+        await Promise.all(authUserPromises);
+      } else {
+        // If admin API succeeded, map user IDs to emails
+        authData.users.forEach((user) => {
+          if (user.id && user.email) {
+            userEmails[user.id] = user.email;
+          }
+        });
       }
+      
+      // Combine profile data with email data
+      const usersWithEmails = profiles.map(profile => ({
+        id: profile.id,
+        full_name: profile.full_name,
+        phone_number: profile.phone_number,
+        is_admin: profile.is_admin || false,
+        email: userEmails[profile.id] || `user-${profile.id.substring(0, 8)}@example.com`, // Fallback if email not found
+      }));
+      
+      setUsers(usersWithEmails);
+      setFilteredUsers(usersWithEmails);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Failed to load users');
