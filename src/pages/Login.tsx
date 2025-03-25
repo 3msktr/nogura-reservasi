@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
@@ -17,11 +16,9 @@ const Login: React.FC = () => {
   const location = useLocation();
   const { signIn, signInWithGoogle, user } = useAuth();
 
-  // Get the redirect path from location state or default to home
   const from = location.state?.from?.pathname || '/';
 
   useEffect(() => {
-    // Redirect if user is already logged in
     if (user) {
       console.log('Login - User already logged in, redirecting to:', from);
       navigate(from, { replace: true });
@@ -41,7 +38,6 @@ const Login: React.FC = () => {
 
     try {
       await signIn(email, password);
-      // Navigation is handled in the useEffect hook above
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error.message || 'Failed to log in. Please check your credentials.');
@@ -56,17 +52,17 @@ const Login: React.FC = () => {
       console.log("Starting Google sign-in process...");
       
       await signInWithGoogle();
-      // Navigation is handled by the auth state change listener
     } catch (error: any) {
       console.error('Google sign in error:', error);
       
-      // Provide more specific error messages
       if (error.message?.includes("invalid_request")) {
         toast.error("Invalid request. Please check your Supabase URL configuration.");
       } else if (error.message?.includes("invalid_client")) {
         toast.error("OAuth configuration error. Please verify your Google client ID and secret in Supabase.");
       } else if (error.message?.includes("redirect_uri_mismatch")) {
         toast.error("Redirect URI mismatch. Please ensure your redirect URLs are correctly configured in Google Console.");
+      } else if (error.message?.includes("consent_required")) {
+        toast.error("Google requires consent. Please check your Google OAuth setup in Google Cloud Console.");
       } else {
         toast.error(error.message || 'Failed to log in with Google.');
       }

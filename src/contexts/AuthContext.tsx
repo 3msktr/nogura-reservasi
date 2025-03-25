@@ -169,9 +169,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: `${window.location.origin}`,
           queryParams: {
             prompt: 'select_account',
+            access_type: 'offline',
+            hd: 'domain.com', // Remove this line if you want to allow all domains
           },
         },
       });
@@ -182,7 +184,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       console.log('Google sign in initiated, redirect URL:', data.url);
-      
       // User will be redirected to Google login
       // After successful authentication, they'll be redirected back to our app
       // and the onAuthStateChange event will trigger
