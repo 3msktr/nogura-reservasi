@@ -20,16 +20,16 @@ const Navbar: React.FC = () => {
           
           <nav className="hidden md:flex items-center gap-6">
             <Link to="/" className="text-sm font-medium hover:text-primary/80 transition-colors">
-              Acara
+              Events
             </Link>
             {isLoggedIn && (
               <Link to="/my-reservations" className="text-sm font-medium hover:text-primary/80 transition-colors">
-                Reservasi Saya
+                My Reservations
               </Link>
             )}
             {isAdmin && (
               <Link to="/admin" className="text-sm font-medium hover:text-primary/80 transition-colors">
-                Dasbor Admin
+                Admin Dashboard
               </Link>
             )}
           </nav>
@@ -40,11 +40,11 @@ const Navbar: React.FC = () => {
           
           {isLoggedIn ? (
             <div className="hidden md:flex items-center gap-4">
-              <Link to="/account" className="p-2 rounded-full hover:bg-secondary transition-colors" title="Kelola Akun">
+              <Link to="/account" className="p-2 rounded-full hover:bg-secondary transition-colors" title="Manage Account">
                 <User size={18} />
               </Link>
               {isAdmin && (
-                <Link to="/admin/users" className="p-2 rounded-full hover:bg-secondary transition-colors" title="Kelola Pengguna">
+                <Link to="/admin/users" className="p-2 rounded-full hover:bg-secondary transition-colors" title="Manage Users">
                   <UserCog size={18} />
                 </Link>
               )}
@@ -53,7 +53,7 @@ const Navbar: React.FC = () => {
                 size="icon"
                 onClick={signOut}
                 className="rounded-full"
-                title="Keluar"
+                title="Log Out"
               >
                 <LogOut size={18} />
               </Button>
@@ -62,12 +62,12 @@ const Navbar: React.FC = () => {
             <div className="hidden md:flex items-center gap-4">
               <Link to="/login">
                 <Button variant="outline" size="sm" className="rounded-md">
-                  Masuk
+                  Log In
                 </Button>
               </Link>
               <Link to="/signup">
                 <Button size="sm" className="rounded-md">
-                  Daftar
+                  Sign Up
                 </Button>
               </Link>
             </div>

@@ -13,7 +13,7 @@ const UserSearchBar = ({ searchQuery, setSearchQuery }: UserSearchBarProps) => {
     <div className="relative">
       <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
       <Input
-        placeholder="Cari berdasarkan nama, email, atau telepon..."
+        placeholder="Search by name, email, or phone..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         className="pl-10"

@@ -39,7 +39,7 @@ const SignUp: React.FC = () => {
     e.preventDefault();
     
     if (password !== confirmPassword) {
-      toast.error('Kata sandi tidak cocok');
+      toast.error('Passwords do not match');
       return;
     }
 
@@ -49,9 +49,9 @@ const SignUp: React.FC = () => {
       await signUp(email, password, fullName);
       
       if (isFirstUser) {
-        toast.success('Anda telah terdaftar sebagai pengguna admin pertama');
+        toast.success('You have been registered as the first admin user');
       } else {
-        toast.success('Pendaftaran berhasil! Silakan periksa email Anda untuk mengonfirmasi akun Anda.');
+        toast.success('Sign up successful! Please check your email to confirm your account.');
       }
       
       // Navigation is handled in the signUp function
@@ -69,7 +69,7 @@ const SignUp: React.FC = () => {
       // If this is the first user, they will be made admin automatically in the auth context
     } catch (error: any) {
       console.error('Google sign up error:', error);
-      toast.error(error.message || 'Gagal mendaftar dengan Google.');
+      toast.error(error.message || 'Failed to sign up with Google.');
     } finally {
       setIsLoading(false);
     }
@@ -81,11 +81,11 @@ const SignUp: React.FC = () => {
         <div className="w-full max-w-md">
           <div className="bg-white rounded-xl shadow-subtle border border-border p-8 animate-scale-in">
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold">Buat Akun</h1>
-              <p className="text-muted-foreground mt-2">Bergabunglah dengan Nogura untuk mulai memesan acara</p>
+              <h1 className="text-2xl font-bold">Create an Account</h1>
+              <p className="text-muted-foreground mt-2">Join Nogura to start booking events</p>
               {isFirstUser && (
                 <div className="mt-2 p-2 bg-green-50 text-green-700 rounded-md text-sm">
-                  Anda akan terdaftar sebagai pengguna admin pertama
+                  You will be registered as the first admin user
                 </div>
               )}
             </div>
@@ -93,7 +93,7 @@ const SignUp: React.FC = () => {
             <form onSubmit={handleSignUp} className="space-y-6">
               <div className="space-y-2">
                 <label htmlFor="fullName" className="text-sm font-medium">
-                  Nama Lengkap
+                  Full Name
                 </label>
                 <input
                   id="fullName"
@@ -108,7 +108,7 @@ const SignUp: React.FC = () => {
 
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium">
-                  Alamat Email
+                  Email Address
                 </label>
                 <input
                   id="email"
@@ -116,14 +116,14 @@ const SignUp: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                  placeholder="anda@contoh.com"
+                  placeholder="you@example.com"
                   required
                 />
               </div>
 
               <div className="space-y-2">
                 <label htmlFor="password" className="text-sm font-medium">
-                  Kata Sandi
+                  Password
                 </label>
                 <div className="relative">
                   <input
@@ -148,7 +148,7 @@ const SignUp: React.FC = () => {
 
               <div className="space-y-2">
                 <label htmlFor="confirmPassword" className="text-sm font-medium">
-                  Konfirmasi Kata Sandi
+                  Confirm Password
                 </label>
                 <div className="relative">
                   <input
@@ -169,13 +169,13 @@ const SignUp: React.FC = () => {
                 className="w-full"
                 disabled={isLoading}
               >
-                {isLoading ? 'Membuat akun...' : 'Buat Akun'}
+                {isLoading ? 'Creating account...' : 'Create Account'}
               </Button>
 
               <div className="relative my-4">
                 <Separator />
                 <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-xs text-muted-foreground">
-                  ATAU
+                  OR
                 </span>
               </div>
 
@@ -193,13 +193,13 @@ const SignUp: React.FC = () => {
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                   <path fill="none" d="M1 1h22v22H1z" />
                 </svg>
-                Daftar dengan Google
+                Sign up with Google
               </Button>
 
               <div className="text-center text-sm">
-                <span className="text-muted-foreground">Sudah memiliki akun?</span>{' '}
+                <span className="text-muted-foreground">Already have an account?</span>{' '}
                 <Link to="/login" className="text-primary hover:underline">
-                  Masuk
+                  Sign in
                 </Link>
               </div>
             </form>

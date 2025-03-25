@@ -18,7 +18,7 @@ const EventDetailPage: React.FC = () => {
     const fetchEvent = async () => {
       if (!eventId) {
         console.error('No eventId provided');
-        toast.error('ID Acara tidak ada');
+        toast.error('Event ID is missing');
         setIsLoading(false);
         return;
       }
@@ -30,7 +30,7 @@ const EventDetailPage: React.FC = () => {
         
         if (!data) {
           console.error('Event not found:', eventId);
-          toast.error('Acara tidak ditemukan');
+          toast.error('Event not found');
           setIsLoading(false);
           return;
         }
@@ -39,7 +39,7 @@ const EventDetailPage: React.FC = () => {
         setEvent(data);
       } catch (error) {
         console.error('Error fetching event:', error);
-        toast.error('Gagal memuat detail acara');
+        toast.error('Failed to load event details');
       } finally {
         setIsLoading(false);
       }
@@ -52,7 +52,7 @@ const EventDetailPage: React.FC = () => {
     return (
       <Layout>
         <div className="container py-20 flex items-center justify-center">
-          <div className="animate-pulse">Memuat detail acara...</div>
+          <div className="animate-pulse">Loading event details...</div>
         </div>
       </Layout>
     );
@@ -63,10 +63,10 @@ const EventDetailPage: React.FC = () => {
       <Layout>
         <div className="container py-20">
           <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">Acara Tidak Ditemukan</h2>
-            <p className="mb-6">Acara yang Anda cari tidak ada atau telah dihapus.</p>
+            <h2 className="text-2xl font-bold mb-4">Event Not Found</h2>
+            <p className="mb-6">The event you're looking for doesn't exist or has been removed.</p>
             <Link to="/">
-              <Button>Kembali ke Acara</Button>
+              <Button>Return to Events</Button>
             </Link>
           </div>
         </div>
@@ -85,7 +85,7 @@ const EventDetailPage: React.FC = () => {
             to="/" 
             className="text-sm text-muted-foreground hover:text-foreground cursor-pointer mb-4 inline-flex items-center"
           >
-            ← Kembali ke acara
+            ← Back to events
           </Link>
           
           <div className="bg-white rounded-xl shadow-subtle border border-border overflow-hidden">
@@ -96,12 +96,12 @@ const EventDetailPage: React.FC = () => {
                   {event.isOpen ? (
                     <>
                       <LockOpen className="h-4 w-4 mr-1" />
-                      <span>Terbuka untuk Booking</span>
+                      <span>Open for Booking</span>
                     </>
                   ) : (
                     <>
                       <Lock className="h-4 w-4 mr-1" />
-                      <span>Tutup untuk Booking</span>
+                      <span>Closed for Booking</span>
                     </>
                   )}
                 </div>
@@ -116,22 +116,22 @@ const EventDetailPage: React.FC = () => {
                 </div>
                 <div className="flex items-center text-sm bg-secondary px-4 py-2 rounded-full">
                   <Clock size={16} className="mr-2" />
-                  <span>{event.sessions.length} sesi tersedia</span>
+                  <span>{event.sessions.length} sessions available</span>
                 </div>
                 <div className="flex items-center text-sm bg-secondary px-4 py-2 rounded-full">
                   <Users size={16} className="mr-2" />
-                  <span>{availableSeats} dari {totalSeats} kursi tersedia</span>
+                  <span>{availableSeats} of {totalSeats} seats available</span>
                 </div>
               </div>
               
               <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">Sesi yang Tersedia</h2>
+                <h2 className="text-xl font-semibold mb-4">Available Sessions</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {event.sessions.map((session) => (
                     <div key={session.id} className="bg-secondary rounded-lg p-4">
                       <div className="font-medium mb-2">{formatTime(session.time)}</div>
                       <div className="text-sm text-muted-foreground mb-2">
-                        {session.availableSeats} dari {session.totalSeats} kursi tersedia
+                        {session.availableSeats} of {session.totalSeats} seats available
                       </div>
                     </div>
                   ))}
@@ -141,14 +141,14 @@ const EventDetailPage: React.FC = () => {
               {event.isOpen ? (
                 <div className="mt-8">
                   <Link to={`/booking/${event.id}`}>
-                    <Button size="lg">Lanjut ke Booking</Button>
+                    <Button size="lg">Proceed to Booking</Button>
                   </Link>
                 </div>
               ) : (
                 <div className="mt-8 bg-secondary rounded-xl p-6">
-                  <h3 className="text-lg font-medium mb-4 text-center">Reservasi Tidak Tersedia</h3>
+                  <h3 className="text-lg font-medium mb-4 text-center">Reservations Unavailable</h3>
                   <p className="text-sm text-muted-foreground text-center">
-                    Acara ini saat ini tidak terbuka untuk reservasi.
+                    This event is currently not open for reservations.
                   </p>
                 </div>
               )}
