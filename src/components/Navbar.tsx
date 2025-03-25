@@ -15,7 +15,7 @@ const Navbar: React.FC = () => {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link to="/" className="text-xl font-semibold tracking-tight transition-colors">
-            NOGURA RAMEN BAR
+            NOGURA
           </Link>
           
           <nav className="hidden md:flex items-center gap-6">
