@@ -31,7 +31,7 @@ const Login: React.FC = () => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast.error('Email and password are required');
+      toast.error('Email dan password diperlukan');
       return;
     }
 
@@ -43,7 +43,7 @@ const Login: React.FC = () => {
       // Navigation is handled in the useEffect hook above
     } catch (error: any) {
       console.error('Login error:', error);
-      toast.error(error.message || 'Failed to log in. Please check your credentials.');
+      toast.error(error.message || 'Gagal masuk. Silakan periksa kredensial Anda.');
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +56,7 @@ const Login: React.FC = () => {
       // Navigation is handled in the useEffect hook above
     } catch (error: any) {
       console.error('Google sign in error:', error);
-      toast.error(error.message || 'Failed to log in with Google.');
+      toast.error(error.message || 'Gagal masuk dengan Google.');
     } finally {
       setIsLoading(false);
     }
@@ -67,14 +67,14 @@ const Login: React.FC = () => {
       <div className="w-full max-w-md">
         <div className="bg-white rounded-xl shadow-subtle border border-border p-8 animate-scale-in">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold">Sign In</h1>
-            <p className="text-muted-foreground mt-2">Welcome back to Nogura</p>
+            <h1 className="text-2xl font-bold">Masuk</h1>
+            <p className="text-muted-foreground mt-2">Selamat datang kembali di Nogura</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
-                Email Address
+                Alamat Email
               </label>
               <input
                 id="email"
@@ -82,14 +82,14 @@ const Login: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                placeholder="you@example.com"
+                placeholder="anda@contoh.com"
                 required
               />
             </div>
 
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium">
-                Password
+                Kata Sandi
               </label>
               <div className="relative">
                 <input
@@ -111,7 +111,7 @@ const Login: React.FC = () => {
               </div>
               <div className="flex justify-end">
                 <a href="#" className="text-xs text-primary hover:underline">
-                  Forgot password?
+                  Lupa kata sandi?
                 </a>
               </div>
             </div>
@@ -121,13 +121,13 @@ const Login: React.FC = () => {
               className="w-full"
               disabled={isLoading}
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? 'Sedang masuk...' : 'Masuk'}
             </Button>
 
             <div className="relative my-4">
               <Separator />
               <span className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-xs text-muted-foreground">
-                OR
+                ATAU
               </span>
             </div>
 
@@ -145,13 +145,13 @@ const Login: React.FC = () => {
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                 <path fill="none" d="M1 1h22v22H1z" />
               </svg>
-              Sign in with Google
+              Masuk dengan Google
             </Button>
 
             <div className="text-center text-sm">
-              <span className="text-muted-foreground">Don't have an account?</span>{' '}
+              <span className="text-muted-foreground">Belum memiliki akun?</span>{' '}
               <Link to="/signup" className="text-primary hover:underline">
-                Sign up
+                Daftar
               </Link>
             </div>
           </form>

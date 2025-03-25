@@ -31,23 +31,23 @@ const UsersTable = ({ users, onToggleAdminStatus, onDeleteUser }: UsersTableProp
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Contact Information</TableHead>
-            <TableHead>Admin Status</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead>Nama</TableHead>
+            <TableHead>Informasi Kontak</TableHead>
+            <TableHead>Status Admin</TableHead>
+            <TableHead>Tindakan</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {users.length === 0 ? (
             <TableRow>
               <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                No users match your search criteria
+                Tidak ada pengguna yang cocok dengan kriteria pencarian Anda
               </TableCell>
             </TableRow>
           ) : (
             users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell>{user.full_name || 'No name'}</TableCell>
+                <TableCell>{user.full_name || 'Tidak ada nama'}</TableCell>
                 <TableCell>
                   <div className="space-y-1">
                     <div className="flex items-center gap-1 text-sm">
@@ -64,7 +64,7 @@ const UsersTable = ({ users, onToggleAdminStatus, onDeleteUser }: UsersTableProp
                 </TableCell>
                 <TableCell>
                   <span className={`px-2 py-1 rounded-full text-xs ${user.is_admin ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                    {user.is_admin ? 'Admin' : 'User'}
+                    {user.is_admin ? 'Admin' : 'Pengguna'}
                   </span>
                 </TableCell>
                 <TableCell>
@@ -75,9 +75,9 @@ const UsersTable = ({ users, onToggleAdminStatus, onDeleteUser }: UsersTableProp
                       onClick={() => onToggleAdminStatus(user.id, user.is_admin)}
                     >
                       {user.is_admin ? (
-                        <><ShieldOff className="h-4 w-4 mr-1" /> Remove Admin</>
+                        <><ShieldOff className="h-4 w-4 mr-1" /> Hapus Admin</>
                       ) : (
-                        <><ShieldCheck className="h-4 w-4 mr-1" /> Make Admin</>
+                        <><ShieldCheck className="h-4 w-4 mr-1" /> Jadikan Admin</>
                       )}
                     </Button>
                     <Button

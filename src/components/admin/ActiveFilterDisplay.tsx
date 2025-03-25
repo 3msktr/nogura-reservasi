@@ -17,14 +17,14 @@ const ActiveFilterDisplay = ({ dateRange, resultCount, onClear }: ActiveFilterDi
   return (
     <div className="mb-4 p-2 bg-muted rounded-md flex items-center justify-between">
       <span className="text-sm">
-        Filtering: {dateRange.from ? formatDate(dateRange.from.toISOString()) : 'Any start date'} 
-        {' to '} 
-        {dateRange.to ? formatDate(dateRange.to.toISOString()) : 'Any end date'}
+        Filter: {dateRange.from ? formatDate(dateRange.from.toISOString()) : 'Tanggal mulai apapun'} 
+        {' sampai '} 
+        {dateRange.to ? formatDate(dateRange.to.toISOString()) : 'Tanggal akhir apapun'}
         {' • '} 
-        {resultCount} results
+        {resultCount} hasil
       </span>
       <Button variant="ghost" size="sm" onClick={onClear}>
-        Clear filter
+        Hapus filter
       </Button>
     </div>
   );

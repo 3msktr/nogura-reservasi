@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, Users } from 'lucide-react';
@@ -32,6 +33,15 @@ const MyReservationsPage: React.FC = () => {
     }
   };
 
+  const getStatusInIndonesian = (status: string) => {
+    switch(status) {
+      case 'confirmed': return 'Terkonfirmasi';
+      case 'pending': return 'Tertunda';
+      case 'cancelled': return 'Dibatalkan';
+      default: return status;
+    }
+  };
+
   const ReservationCard = ({ reservation, onCancel }: { reservation: Reservation, onCancel: () => void }) => {
     return (
       <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
@@ -42,44 +52,44 @@ const MyReservationsPage: React.FC = () => {
             reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
             'bg-red-100 text-red-800'
           }`}>
-            {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
+            {getStatusInIndonesian(reservation.status)}
           </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="flex items-center text-sm">
             <Calendar size={16} className="mr-2 text-muted-foreground" />
-            <span>{reservation.event?.date ? formatDate(reservation.event.date) : 'Date not available'}</span>
+            <span>{reservation.event?.date ? formatDate(reservation.event.date) : 'Tanggal tidak tersedia'}</span>
           </div>
           <div className="flex items-center text-sm">
             <Clock size={16} className="mr-2 text-muted-foreground" />
-            <span>{reservation.session?.time ? formatTime(reservation.session.time) : 'Time not available'}</span>
+            <span>{reservation.session?.time ? formatTime(reservation.session.time) : 'Waktu tidak tersedia'}</span>
           </div>
           <div className="flex items-center text-sm">
             <Users size={16} className="mr-2 text-muted-foreground" />
-            <span>{reservation.numberOfSeats} {reservation.numberOfSeats === 1 ? 'Seat' : 'Seats'}</span>
+            <span>{reservation.numberOfSeats} {reservation.numberOfSeats === 1 ? 'Kursi' : 'Kursi'}</span>
           </div>
         </div>
         
         {reservation.contactName && (
           <div className="mt-4 pt-4 border-t border-gray-100">
-            <h4 className="font-medium text-sm mb-2">Contact Information</h4>
+            <h4 className="font-medium text-sm mb-2">Informasi Kontak</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               {reservation.contactName && (
                 <div>
-                  <p className="text-muted-foreground">Name</p>
+                  <p className="text-muted-foreground">Nama</p>
                   <p>{reservation.contactName}</p>
                 </div>
               )}
               {reservation.phoneNumber && (
                 <div>
-                  <p className="text-muted-foreground">Phone</p>
+                  <p className="text-muted-foreground">Telepon</p>
                   <p>{reservation.phoneNumber}</p>
                 </div>
               )}
               {reservation.allergyNotes && (
                 <div className="col-span-1 md:col-span-2">
-                  <p className="text-muted-foreground">Allergy Notes</p>
+                  <p className="text-muted-foreground">Catatan Alergi</p>
                   <p>{reservation.allergyNotes}</p>
                 </div>
               )}
@@ -93,7 +103,7 @@ const MyReservationsPage: React.FC = () => {
             className="text-red-500 hover:text-red-700 hover:bg-red-50"
             onClick={() => handleCancelReservation(reservation.id)}
           >
-            Cancel Reservation
+            Batalkan Reservasi
           </Button>
         )}
       </div>
@@ -104,14 +114,14 @@ const MyReservationsPage: React.FC = () => {
     <Layout>
       <div className="container py-12 md:py-20">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl md:text-4xl font-bold mb-8">My Reservations</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-8">Reservasi Saya</h1>
           
           {isLoading ? (
-            <div className="animate-pulse">Loading your reservations...</div>
+            <div className="animate-pulse">Memuat reservasi Anda...</div>
           ) : reservations.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground mb-6">You don't have any reservations yet.</p>
-              <Button onClick={() => navigate('/')}>Browse Events</Button>
+              <p className="text-muted-foreground mb-6">Anda belum memiliki reservasi apapun.</p>
+              <Button onClick={() => navigate('/')}>Jelajahi Acara</Button>
             </div>
           ) : (
             <div className="space-y-6">

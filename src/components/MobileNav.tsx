@@ -35,7 +35,7 @@ const MobileNav = () => {
               strokeLinejoin="round"
             />
           </svg>
-          <span className="sr-only">Toggle menu</span>
+          <span className="sr-only">Buka menu</span>
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-[80%] sm:max-w-sm">
@@ -49,7 +49,7 @@ const MobileNav = () => {
             to="/"
             className="flex items-center py-2 text-base font-medium hover:text-primary/80 transition-colors"
           >
-            Events
+            Acara
           </Link>
           
           {isLoggedIn && (
@@ -57,7 +57,7 @@ const MobileNav = () => {
               to="/my-reservations"
               className="flex items-center py-2 text-base font-medium hover:text-primary/80 transition-colors"
             >
-              My Reservations
+              Reservasi Saya
             </Link>
           )}
           
@@ -66,7 +66,7 @@ const MobileNav = () => {
               to="/admin"
               className="flex items-center py-2 text-base font-medium hover:text-primary/80 transition-colors"
             >
-              Admin Dashboard
+              Dasbor Admin
             </Link>
           )}
           
@@ -77,7 +77,7 @@ const MobileNav = () => {
                 className="flex items-center gap-2 py-2 text-base font-medium hover:text-primary/80 transition-colors"
               >
                 <User size={18} />
-                Account
+                Akun
               </Link>
               
               {isAdmin && (
@@ -86,7 +86,7 @@ const MobileNav = () => {
                   className="flex items-center gap-2 py-2 text-base font-medium hover:text-primary/80 transition-colors"
                 >
                   <UserCog size={18} />
-                  Manage Users
+                  Kelola Pengguna
                 </Link>
               )}
               
@@ -96,7 +96,7 @@ const MobileNav = () => {
                 className="flex w-full items-center justify-start gap-2 px-0 hover:bg-transparent"
               >
                 <LogOut size={18} />
-                Log Out
+                Keluar
               </Button>
             </div>
           ) : (
@@ -105,13 +105,13 @@ const MobileNav = () => {
                 to="/login"
                 className="block w-full py-2 text-base font-medium hover:text-primary/80 transition-colors"
               >
-                Log In
+                Masuk
               </Link>
               <Link
                 to="/signup"
                 className="block w-full py-2 text-base font-medium hover:text-primary/80 transition-colors"
               >
-                Sign Up
+                Daftar
               </Link>
             </div>
           )}

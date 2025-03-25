@@ -29,9 +29,9 @@ const DeleteUserDialog = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete User {userName ? `"${userName}"` : ''}</DialogTitle>
+          <DialogTitle>Hapus Pengguna {userName ? `"${userName}"` : ''}</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete this user? This action cannot be undone.
+            Apakah Anda yakin ingin menghapus pengguna ini? Tindakan ini tidak dapat dibatalkan.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -39,14 +39,14 @@ const DeleteUserDialog = ({
             variant="secondary" 
             onClick={onClose}
           >
-            Cancel
+            Batal
           </Button>
           <Button 
             variant="destructive"
             onClick={onDelete} 
             disabled={isDeleting}
           >
-            {isDeleting ? 'Deleting...' : 'Delete User'}
+            {isDeleting ? 'Menghapus...' : 'Hapus Pengguna'}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -30,7 +30,7 @@ const ReservationActions = ({
           variant="ghost"
           size="sm"
           onClick={() => onUpdateStatus(id, 'confirmed')}
-          title="Confirm Reservation"
+          title="Konfirmasi Reservasi"
         >
           <Check className="h-4 w-4 text-green-500" />
         </Button>
@@ -40,7 +40,7 @@ const ReservationActions = ({
           variant="ghost"
           size="sm"
           onClick={() => onUpdateStatus(id, 'cancelled')}
-          title="Cancel Reservation"
+          title="Batalkan Reservasi"
         >
           <X className="h-4 w-4 text-red-500" />
         </Button>
@@ -50,7 +50,7 @@ const ReservationActions = ({
           variant="ghost"
           size="sm"
           onClick={onWhatsAppClick}
-          title="Send WhatsApp Message"
+          title="Kirim Pesan WhatsApp"
         >
           <MessageSquare className="h-4 w-4 text-green-600" />
         </Button>
@@ -59,7 +59,7 @@ const ReservationActions = ({
         variant="ghost"
         size="sm"
         onClick={() => navigate(`/event/${eventId}`)}
-        title="View Event"
+        title="Lihat Acara"
       >
         <Eye className="h-4 w-4" />
       </Button>

@@ -31,7 +31,7 @@ const DateFilterPopover = ({
       <PopoverTrigger asChild>
         <Button variant="outline" className="gap-2">
           <Filter className="h-4 w-4" />
-          Filter by Date
+          Filter berdasarkan Tanggal
           {hasActiveFilter && (
             <span className="ml-1 h-2 w-2 rounded-full bg-primary"></span>
           )}
@@ -39,17 +39,17 @@ const DateFilterPopover = ({
       </PopoverTrigger>
       <PopoverContent className="w-auto p-4" align="end">
         <div className="space-y-4">
-          <h4 className="font-medium">Filter by Event Date</h4>
+          <h4 className="font-medium">Filter berdasarkan Tanggal Acara</h4>
           <DateRangePicker
             date={dateRange}
             onDateChange={(date) => setDateRange(date)}
           />
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" size="sm" onClick={onClear}>
-              Clear
+              Hapus
             </Button>
             <Button size="sm" onClick={() => setShowDateFilter(false)}>
-              Apply
+              Terapkan
             </Button>
           </div>
         </div>
