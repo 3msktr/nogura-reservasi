@@ -41,7 +41,7 @@ const MobileNav = () => {
       <SheetContent side="left" className="w-[80%] sm:max-w-sm">
         <SheetHeader className="mb-6">
           <SheetTitle className="text-left text-xl font-semibold tracking-tight">
-            NOGURA
+            NOGURA RAMEN BAR
           </SheetTitle>
         </SheetHeader>
         <nav className="flex flex-col space-y-4">
