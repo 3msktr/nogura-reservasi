@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { User, LogOut, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import MobileNav from './MobileNav';
 
 const Navbar: React.FC = () => {
   const { user, isAdmin, signOut } = useAuth();
@@ -35,8 +36,10 @@ const Navbar: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-4">
+          <MobileNav />
+          
           {isLoggedIn ? (
-            <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-4">
               <Link to="/account" className="p-2 rounded-full hover:bg-secondary transition-colors" title="Manage Account">
                 <User size={18} />
               </Link>
@@ -56,7 +59,7 @@ const Navbar: React.FC = () => {
               </Button>
             </div>
           ) : (
-            <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-4">
               <Link to="/login">
                 <Button variant="outline" size="sm" className="rounded-md">
                   Log In
