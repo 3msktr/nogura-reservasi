@@ -13,7 +13,7 @@ const Index: React.FC = () => {
         <div className="container max-w-7xl mx-auto">
           <div className="text-center mb-16 animate-fade-in">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
-              Nogura Restaurant<br />Reservation System
+              Nogura<br />Reservation System
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
               Secure your seat at our exclusive dining events. Limited availability, extraordinary experiences.
