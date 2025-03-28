@@ -6,7 +6,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SiteSettingsForm from '@/components/admin/settings/SiteSettingsForm';
-import ClockSettingsForm from '@/components/admin/settings/ClockSettingsForm';
+import HowItWorksSettingsForm from '@/components/admin/settings/HowItWorksSettingsForm';
 import { SiteSettings } from '@/services/settingsService';
 
 const AdminSettings = () => {
@@ -22,7 +22,7 @@ const AdminSettings = () => {
     }
   }, [isLoading, settings]);
 
-  const handleSettingsChange = (key: keyof SiteSettings, value: string | number) => {
+  const handleSettingsChange = (key: keyof SiteSettings, value: string | number | any) => {
     setUpdatedSettings(prev => ({
       ...prev,
       [key]: value
@@ -72,7 +72,7 @@ const AdminSettings = () => {
         <Tabs defaultValue="content">
           <TabsList className="mb-8">
             <TabsTrigger value="content">Content</TabsTrigger>
-            <TabsTrigger value="clock">Clock Style</TabsTrigger>
+            <TabsTrigger value="how-it-works">How It Works</TabsTrigger>
           </TabsList>
 
           <TabsContent value="content">
@@ -82,10 +82,10 @@ const AdminSettings = () => {
             />
           </TabsContent>
 
-          <TabsContent value="clock">
-            <ClockSettingsForm 
-              initialSettings={settings} 
-              onSettingsChange={handleSettingsChange} 
+          <TabsContent value="how-it-works">
+            <HowItWorksSettingsForm
+              initialSettings={settings}
+              onSettingsChange={handleSettingsChange}
             />
           </TabsContent>
         </Tabs>

@@ -1,14 +1,20 @@
 
 import { useState, useEffect } from 'react';
 import { getSettings, updateSettings, SiteSettings } from '@/services/settingsService';
-import { toast } from 'sonner';
 
 export const useSettings = () => {
   const [settings, setSettings] = useState<SiteSettings>({
     clock_color: 'text-muted-foreground',
     clock_size: 18,
     clock_font_size: 16,
-    tagline_text: 'Halal Artisan Ramen. Crafted from Scratch, Served in a Bowl.'
+    tagline_text: 'Halal Artisan Ramen. Crafted from Scratch, Served in a Bowl.',
+    how_it_works_title: 'How It Works',
+    how_it_works_description: 'Our unique war ticket reservation system ensures everyone has a fair chance to secure their seats.',
+    how_it_works_steps: [
+      { title: 'Watch the Timer', description: 'Monitor the countdown timer to know exactly when reservations will open.' },
+      { title: 'Select Your Session', description: 'Choose your preferred time slot from the available sessions.' },
+      { title: 'Confirm Your Seats', description: 'Quickly secure your reservation before all seats are taken.' }
+    ]
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
 

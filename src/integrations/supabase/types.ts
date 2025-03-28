@@ -186,6 +186,9 @@ export type Database = {
         Row: {
           clock_color: string
           clock_size: number
+          how_it_works_description: string
+          how_it_works_steps: Json
+          how_it_works_title: string
           id: string
           tagline_text: string
           updated_at: string
@@ -193,6 +196,9 @@ export type Database = {
         Insert: {
           clock_color?: string
           clock_size?: number
+          how_it_works_description?: string
+          how_it_works_steps?: Json
+          how_it_works_title?: string
           id: string
           tagline_text?: string
           updated_at?: string
@@ -200,6 +206,9 @@ export type Database = {
         Update: {
           clock_color?: string
           clock_size?: number
+          how_it_works_description?: string
+          how_it_works_steps?: Json
+          how_it_works_title?: string
           id?: string
           tagline_text?: string
           updated_at?: string
