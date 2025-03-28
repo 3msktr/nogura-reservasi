@@ -24,9 +24,9 @@ const Clock: React.FC = () => {
   }, []);
   
   return (
-    <div className="bg-background border border-border rounded-lg p-4 flex items-center justify-center shadow-sm mx-auto max-w-sm">
-      <ClockIcon className="mr-2" size={20} />
-      <p className="text-lg font-medium">{currentTime}</p>
+    <div className="flex items-center justify-center py-2 mx-auto animate-fade-in">
+      <ClockIcon className="mr-2 text-muted-foreground" size={18} />
+      <p className="text-base font-medium text-muted-foreground">{currentTime}</p>
     </div>
   );
 };
