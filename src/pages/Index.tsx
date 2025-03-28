@@ -2,6 +2,7 @@
 import React from 'react';
 import Layout from '@/components/Layout';
 import EventCard from '@/components/EventCard';
+import Clock from '@/components/Clock';
 import { useEvents } from '@/hooks/useEvents';
 
 const Index: React.FC = () => {
@@ -17,7 +18,6 @@ const Index: React.FC = () => {
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
               Halal Artisan Ramen. Crafted from Scratch, Served in a Bowl.
-
             </p>
           </div>
           
@@ -35,6 +35,10 @@ const Index: React.FC = () => {
             </div>
           )}
         </div>
+      </section>
+      
+      <section className="py-12 px-4">
+        <Clock />
       </section>
       
       <section className="bg-secondary py-20 px-4">
