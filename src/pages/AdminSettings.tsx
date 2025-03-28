@@ -1,9 +1,7 @@
-
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import Layout from '@/components/Layout';
 import { useSettings } from '@/hooks/useSettings';
-import { updateSettings } from '@/services/settingsService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,7 +25,7 @@ const colorOptions = [
 ];
 
 const AdminSettings = () => {
-  const { settings, isLoading } = useSettings();
+  const { settings, isLoading, saveSettings } = useSettings();
   const [taglineText, setTaglineText] = useState(settings.tagline_text || '');
   const [clockColor, setClockColor] = useState(settings.clock_color || 'text-muted-foreground');
   const [clockSize, setClockSize] = useState(settings.clock_size || 18);
@@ -46,8 +44,7 @@ const AdminSettings = () => {
   const handleSaveSettings = async () => {
     setIsSaving(true);
     try {
-      const result = await updateSettings({
-        id: settings.id,
+      const result = await saveSettings({
         tagline_text: taglineText,
         clock_color: clockColor,
         clock_size: clockSize,

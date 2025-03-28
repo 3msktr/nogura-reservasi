@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { getSettings, SiteSettings } from '@/services/settingsService';
+import { getSettings, updateSettings, SiteSettings } from '@/services/settingsService';
+import { toast } from 'sonner';
 
 export const useSettings = () => {
   const [settings, setSettings] = useState<SiteSettings>({
@@ -22,8 +23,27 @@ export const useSettings = () => {
     fetchSettings();
   }, []);
 
+  const saveSettings = async (updatedSettings: SiteSettings): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const result = await updateSettings({
+        ...settings,
+        ...updatedSettings
+      });
+      
+      if (result.success) {
+        setSettings(prev => ({ ...prev, ...updatedSettings }));
+      }
+      
+      return result;
+    } catch (error: any) {
+      console.error('Error saving settings:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
   return {
     settings,
-    isLoading
+    isLoading,
+    saveSettings
   };
 };

@@ -38,16 +38,21 @@ export const getSettings = async (): Promise<SiteSettings> => {
 
 export const updateSettings = async (settings: SiteSettings): Promise<{ success: boolean; error?: string }> => {
   try {
+    console.log('Updating settings with:', settings);
+    
+    // Ensure we have a default ID if none is provided
+    const settingsToUpdate = {
+      id: settings.id || 'default', 
+      clock_color: settings.clock_color,
+      clock_size: settings.clock_size,
+      clock_font_size: settings.clock_font_size,
+      tagline_text: settings.tagline_text,
+      updated_at: new Date().toISOString()
+    };
+    
     const { data, error } = await supabase
       .from('site_settings')
-      .upsert({ 
-        id: settings.id || 'default', 
-        clock_color: settings.clock_color,
-        clock_size: settings.clock_size,
-        clock_font_size: settings.clock_font_size,
-        tagline_text: settings.tagline_text,
-        updated_at: new Date().toISOString()
-      })
+      .upsert(settingsToUpdate)
       .select()
       .single();
     
@@ -56,6 +61,7 @@ export const updateSettings = async (settings: SiteSettings): Promise<{ success:
       return { success: false, error: error.message };
     }
     
+    console.log('Settings updated successfully:', data);
     return { success: true };
   } catch (error: any) {
     console.error('Unexpected error updating settings:', error);
