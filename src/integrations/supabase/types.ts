@@ -182,6 +182,30 @@ export type Database = {
           },
         ]
       }
+      site_settings: {
+        Row: {
+          clock_color: string
+          clock_size: number
+          id: string
+          tagline_text: string
+          updated_at: string
+        }
+        Insert: {
+          clock_color?: string
+          clock_size?: number
+          id: string
+          tagline_text?: string
+          updated_at?: string
+        }
+        Update: {
+          clock_color?: string
+          clock_size?: number
+          id?: string
+          tagline_text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
