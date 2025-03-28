@@ -10,6 +10,10 @@ const Index: React.FC = () => {
 
   return (
     <Layout>
+      <div className="container mx-auto px-4 py-4 mt-16">
+        <Clock />
+      </div>
+      
       <section className="relative py-20 px-4 md:py-32 overflow-hidden">
         <div className="container max-w-7xl mx-auto">
           <div className="text-center mb-16 animate-fade-in">
@@ -35,10 +39,6 @@ const Index: React.FC = () => {
             </div>
           )}
         </div>
-      </section>
-      
-      <section className="py-12 px-4">
-        <Clock />
       </section>
       
       <section className="bg-secondary py-20 px-4">
