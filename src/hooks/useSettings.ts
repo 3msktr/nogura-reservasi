@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { getSettings, updateSettings, SiteSettings } from '@/services/settingsService';
+import { getFromCache, setInCache, removeFromCache, CACHE_KEYS } from '@/utils/cacheUtils';
 
 export const useSettings = () => {
   const [settings, setSettings] = useState<SiteSettings>({
@@ -18,8 +19,23 @@ export const useSettings = () => {
   useEffect(() => {
     const fetchSettings = async () => {
       setIsLoading(true);
+      
+      // Try to get settings from cache first
+      const cachedSettings = getFromCache<SiteSettings>(CACHE_KEYS.SETTINGS);
+      
+      if (cachedSettings) {
+        setSettings(cachedSettings);
+        setIsLoading(false);
+        return;
+      }
+      
+      // If not in cache or expired, fetch from API
       const data = await getSettings();
       setSettings(data);
+      
+      // Cache the settings for 30 minutes
+      setInCache(CACHE_KEYS.SETTINGS, data, 30);
+      
       setIsLoading(false);
     };
 
@@ -34,7 +50,11 @@ export const useSettings = () => {
       });
       
       if (result.success) {
-        setSettings(prev => ({ ...prev, ...updatedSettings }));
+        const newSettings = { ...settings, ...updatedSettings };
+        setSettings(newSettings);
+        
+        // Update cache with new settings
+        setInCache(CACHE_KEYS.SETTINGS, newSettings, 30);
       }
       
       return result;
