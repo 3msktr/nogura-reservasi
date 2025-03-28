@@ -3,9 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface SiteSettings {
   id?: string;
-  clock_color?: string;
-  clock_size?: number;
-  clock_font_size?: number;
   tagline_text?: string;
   how_it_works_title?: string;
   how_it_works_description?: string;
@@ -27,9 +24,6 @@ export const getSettings = async (): Promise<SiteSettings> => {
   if (error) {
     console.error('Error fetching settings:', error);
     return {
-      clock_color: 'text-muted-foreground',
-      clock_size: 18,
-      clock_font_size: 16,
       tagline_text: 'Halal Artisan Ramen. Crafted from Scratch, Served in a Bowl.',
       how_it_works_title: 'How It Works',
       how_it_works_description: 'Our unique war ticket reservation system ensures everyone has a fair chance to secure their seats.',
@@ -41,19 +35,20 @@ export const getSettings = async (): Promise<SiteSettings> => {
     };
   }
   
-  return data || {
-    clock_color: 'text-muted-foreground',
-    clock_size: 18,
-    clock_font_size: 16,
-    tagline_text: 'Halal Artisan Ramen. Crafted from Scratch, Served in a Bowl.',
-    how_it_works_title: 'How It Works',
-    how_it_works_description: 'Our unique war ticket reservation system ensures everyone has a fair chance to secure their seats.',
-    how_it_works_steps: [
-      { title: 'Watch the Timer', description: 'Monitor the countdown timer to know exactly when reservations will open.' },
-      { title: 'Select Your Session', description: 'Choose your preferred time slot from the available sessions.' },
-      { title: 'Confirm Your Seats', description: 'Quickly secure your reservation before all seats are taken.' }
-    ]
-  };
+  // Ensure how_it_works_steps is properly parsed as an array of objects
+  let parsedData: SiteSettings = { ...data };
+  
+  // Parse how_it_works_steps if it's a string
+  if (data.how_it_works_steps && typeof data.how_it_works_steps === 'string') {
+    try {
+      parsedData.how_it_works_steps = JSON.parse(data.how_it_works_steps);
+    } catch (e) {
+      console.error('Error parsing how_it_works_steps:', e);
+      parsedData.how_it_works_steps = [];
+    }
+  }
+  
+  return parsedData;
 };
 
 export const updateSettings = async (settings: SiteSettings): Promise<{ success: boolean; error?: string }> => {
@@ -63,9 +58,6 @@ export const updateSettings = async (settings: SiteSettings): Promise<{ success:
     // Ensure we have a default ID if none is provided
     const settingsToUpdate = {
       id: settings.id || 'default', 
-      clock_color: settings.clock_color,
-      clock_size: settings.clock_size,
-      clock_font_size: settings.clock_font_size,
       tagline_text: settings.tagline_text,
       how_it_works_title: settings.how_it_works_title,
       how_it_works_description: settings.how_it_works_description,

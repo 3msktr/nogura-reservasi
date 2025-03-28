@@ -2,7 +2,6 @@
 import React from 'react';
 import Layout from '@/components/Layout';
 import EventCard from '@/components/EventCard';
-import Clock from '@/components/Clock';
 import { useEvents } from '@/hooks/useEvents';
 import { useSettings } from '@/hooks/useSettings';
 
@@ -22,12 +21,6 @@ const Index: React.FC = () => {
               {settings.tagline_text || 'Halal Artisan Ramen. Crafted from Scratch, Served in a Bowl.'}
             </p>
           </div>
-          
-          <Clock 
-            textColor={settings.clock_color} 
-            iconSize={settings.clock_size}
-            fontSize={settings.clock_font_size}
-          />
           
           <div className="mt-12">
             {isLoading ? (

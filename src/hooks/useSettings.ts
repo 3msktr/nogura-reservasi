@@ -4,9 +4,6 @@ import { getSettings, updateSettings, SiteSettings } from '@/services/settingsSe
 
 export const useSettings = () => {
   const [settings, setSettings] = useState<SiteSettings>({
-    clock_color: 'text-muted-foreground',
-    clock_size: 18,
-    clock_font_size: 16,
     tagline_text: 'Halal Artisan Ramen. Crafted from Scratch, Served in a Bowl.',
     how_it_works_title: 'How It Works',
     how_it_works_description: 'Our unique war ticket reservation system ensures everyone has a fair chance to secure their seats.',
