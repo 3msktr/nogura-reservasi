@@ -4,9 +4,11 @@ import Layout from '@/components/Layout';
 import EventCard from '@/components/EventCard';
 import Clock from '@/components/Clock';
 import { useEvents } from '@/hooks/useEvents';
+import { useSettings } from '@/hooks/useSettings';
 
 const Index: React.FC = () => {
   const { events, isLoading } = useEvents();
+  const { settings } = useSettings();
 
   return (
     <Layout>
@@ -17,11 +19,14 @@ const Index: React.FC = () => {
               Reservasi Nogura
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Halal Artisan Ramen. Crafted from Scratch, Served in a Bowl.
+              {settings.tagline_text || 'Halal Artisan Ramen. Crafted from Scratch, Served in a Bowl.'}
             </p>
           </div>
           
-          <Clock />
+          <Clock 
+            textColor={settings.clock_color} 
+            iconSize={settings.clock_size} 
+          />
           
           <div className="mt-12">
             {isLoading ? (
