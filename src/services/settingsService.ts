@@ -10,6 +10,8 @@ export interface SiteSettings {
     title: string;
     description: string;
   }>;
+  clock_color?: string;
+  clock_size?: number;
   updated_at?: string;
 }
 
@@ -35,29 +37,62 @@ export const getSettings = async (): Promise<SiteSettings> => {
     };
   }
   
-  // Ensure how_it_works_steps is properly parsed as an array of objects
-  let parsedData: SiteSettings = { ...data };
+  // Create a properly typed parsed data object
+  let parsedData: SiteSettings = { 
+    id: data.id,
+    tagline_text: data.tagline_text,
+    how_it_works_title: data.how_it_works_title,
+    how_it_works_description: data.how_it_works_description,
+    clock_color: data.clock_color,
+    clock_size: data.clock_size,
+    updated_at: data.updated_at
+  };
   
-  // Parse how_it_works_steps if it's a string or JSON object
+  // Handle how_it_works_steps with proper type conversion based on what we might receive
   if (data.how_it_works_steps) {
     try {
-      // If it's already an array, use it directly
-      if (Array.isArray(data.how_it_works_steps)) {
-        parsedData.how_it_works_steps = data.how_it_works_steps;
+      // If it's already an array of objects with the right structure, use it directly
+      if (Array.isArray(data.how_it_works_steps) && 
+          data.how_it_works_steps.length > 0 && 
+          typeof data.how_it_works_steps[0] === 'object' &&
+          'title' in data.how_it_works_steps[0] &&
+          'description' in data.how_it_works_steps[0]) {
+        parsedData.how_it_works_steps = data.how_it_works_steps as Array<{title: string; description: string}>;
       } 
       // If it's a string (JSON), parse it
       else if (typeof data.how_it_works_steps === 'string') {
-        parsedData.how_it_works_steps = JSON.parse(data.how_it_works_steps);
+        const parsed = JSON.parse(data.how_it_works_steps);
+        if (Array.isArray(parsed)) {
+          parsedData.how_it_works_steps = parsed as Array<{title: string; description: string}>;
+        }
       }
       // If it's an object but not an array (from JSONB column)
-      else if (typeof data.how_it_works_steps === 'object') {
-        // Some databases return JSONB as an object directly
-        parsedData.how_it_works_steps = data.how_it_works_steps;
+      else if (typeof data.how_it_works_steps === 'object' && !Array.isArray(data.how_it_works_steps)) {
+        // Some databases might return JSONB in various formats
+        // Try to convert any format into our expected array format
+        if ('steps' in data.how_it_works_steps) {
+          parsedData.how_it_works_steps = (data.how_it_works_steps as any).steps;
+        } else {
+          // Convert object to array if possible
+          const steps = Object.values(data.how_it_works_steps);
+          if (steps.length > 0 && typeof steps[0] === 'object') {
+            parsedData.how_it_works_steps = steps as Array<{title: string; description: string}>;
+          }
+        }
       }
     } catch (e) {
       console.error('Error parsing how_it_works_steps:', e);
       parsedData.how_it_works_steps = [];
     }
+  }
+  
+  // Fallback if parsing failed or how_it_works_steps is missing or empty
+  if (!parsedData.how_it_works_steps || parsedData.how_it_works_steps.length === 0) {
+    parsedData.how_it_works_steps = [
+      { title: 'Watch the Timer', description: 'Monitor the countdown timer to know exactly when reservations will open.' },
+      { title: 'Select Your Session', description: 'Choose your preferred time slot from the available sessions.' },
+      { title: 'Confirm Your Seats', description: 'Quickly secure your reservation before all seats are taken.' }
+    ];
   }
   
   return parsedData;
@@ -74,6 +109,8 @@ export const updateSettings = async (settings: SiteSettings): Promise<{ success:
       how_it_works_title: settings.how_it_works_title,
       how_it_works_description: settings.how_it_works_description,
       how_it_works_steps: settings.how_it_works_steps,
+      clock_color: settings.clock_color,
+      clock_size: settings.clock_size,
       updated_at: new Date().toISOString()
     };
     
