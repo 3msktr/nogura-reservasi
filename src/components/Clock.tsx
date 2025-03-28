@@ -5,11 +5,13 @@ import { Clock as ClockIcon } from 'lucide-react';
 interface ClockProps {
   textColor?: string;
   iconSize?: number;
+  fontSize?: number;
 }
 
 const Clock: React.FC<ClockProps> = ({ 
   textColor = 'text-muted-foreground',
-  iconSize = 18 
+  iconSize = 18,
+  fontSize = 16
 }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
   
@@ -34,7 +36,7 @@ const Clock: React.FC<ClockProps> = ({
   return (
     <div className="flex items-center justify-center py-2 mx-auto animate-fade-in">
       <ClockIcon className={`mr-2 ${textColor}`} size={iconSize} />
-      <p className={`text-base font-medium ${textColor}`}>{currentTime}</p>
+      <p className={`font-medium ${textColor}`} style={{ fontSize: `${fontSize}px` }}>{currentTime}</p>
     </div>
   );
 };

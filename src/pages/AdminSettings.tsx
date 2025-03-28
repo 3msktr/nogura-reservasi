@@ -31,6 +31,7 @@ const AdminSettings = () => {
   const [taglineText, setTaglineText] = useState(settings.tagline_text || '');
   const [clockColor, setClockColor] = useState(settings.clock_color || 'text-muted-foreground');
   const [clockSize, setClockSize] = useState(settings.clock_size || 18);
+  const [clockFontSize, setClockFontSize] = useState(settings.clock_font_size || 16);
   const [isSaving, setIsSaving] = useState(false);
 
   React.useEffect(() => {
@@ -38,6 +39,7 @@ const AdminSettings = () => {
       setTaglineText(settings.tagline_text || '');
       setClockColor(settings.clock_color || 'text-muted-foreground');
       setClockSize(settings.clock_size || 18);
+      setClockFontSize(settings.clock_font_size || 16);
     }
   }, [isLoading, settings]);
 
@@ -48,7 +50,8 @@ const AdminSettings = () => {
         id: settings.id,
         tagline_text: taglineText,
         clock_color: clockColor,
-        clock_size: clockSize
+        clock_size: clockSize,
+        clock_font_size: clockFontSize
       });
 
       if (result.success) {
@@ -145,7 +148,7 @@ const AdminSettings = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Clock Size</Label>
+                  <Label>Clock Icon Size</Label>
                   <div className="pt-2">
                     <Slider
                       value={[clockSize]}
@@ -161,9 +164,26 @@ const AdminSettings = () => {
                   </div>
                 </div>
 
+                <div className="space-y-2">
+                  <Label>Clock Font Size</Label>
+                  <div className="pt-2">
+                    <Slider
+                      value={[clockFontSize]}
+                      min={12}
+                      max={24}
+                      step={1}
+                      onValueChange={(value) => setClockFontSize(value[0])}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Small</span>
+                    <span>Large</span>
+                  </div>
+                </div>
+
                 <div className="p-4 border rounded-md bg-muted/50">
                   <p className="text-sm font-medium mb-2">Preview:</p>
-                  <Clock textColor={clockColor} iconSize={clockSize} />
+                  <Clock textColor={clockColor} iconSize={clockSize} fontSize={clockFontSize} />
                 </div>
               </CardContent>
             </Card>

@@ -25,7 +25,8 @@ const Index: React.FC = () => {
           
           <Clock 
             textColor={settings.clock_color} 
-            iconSize={settings.clock_size} 
+            iconSize={settings.clock_size}
+            fontSize={settings.clock_font_size}
           />
           
           <div className="mt-12">

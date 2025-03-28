@@ -5,6 +5,7 @@ export interface SiteSettings {
   id?: string;
   clock_color?: string;
   clock_size?: number;
+  clock_font_size?: number;
   tagline_text?: string;
   updated_at?: string;
 }
@@ -22,6 +23,7 @@ export const getSettings = async (): Promise<SiteSettings> => {
     return {
       clock_color: 'text-muted-foreground',
       clock_size: 18,
+      clock_font_size: 16,
       tagline_text: 'Halal Artisan Ramen. Crafted from Scratch, Served in a Bowl.'
     };
   }
@@ -29,6 +31,7 @@ export const getSettings = async (): Promise<SiteSettings> => {
   return data || {
     clock_color: 'text-muted-foreground',
     clock_size: 18,
+    clock_font_size: 16,
     tagline_text: 'Halal Artisan Ramen. Crafted from Scratch, Served in a Bowl.'
   };
 };
@@ -41,6 +44,7 @@ export const updateSettings = async (settings: SiteSettings): Promise<{ success:
         id: settings.id || 'default', 
         clock_color: settings.clock_color,
         clock_size: settings.clock_size,
+        clock_font_size: settings.clock_font_size,
         tagline_text: settings.tagline_text,
         updated_at: new Date().toISOString()
       })
