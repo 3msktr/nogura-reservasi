@@ -38,10 +38,22 @@ export const getSettings = async (): Promise<SiteSettings> => {
   // Ensure how_it_works_steps is properly parsed as an array of objects
   let parsedData: SiteSettings = { ...data };
   
-  // Parse how_it_works_steps if it's a string
-  if (data.how_it_works_steps && typeof data.how_it_works_steps === 'string') {
+  // Parse how_it_works_steps if it's a string or JSON object
+  if (data.how_it_works_steps) {
     try {
-      parsedData.how_it_works_steps = JSON.parse(data.how_it_works_steps);
+      // If it's already an array, use it directly
+      if (Array.isArray(data.how_it_works_steps)) {
+        parsedData.how_it_works_steps = data.how_it_works_steps;
+      } 
+      // If it's a string (JSON), parse it
+      else if (typeof data.how_it_works_steps === 'string') {
+        parsedData.how_it_works_steps = JSON.parse(data.how_it_works_steps);
+      }
+      // If it's an object but not an array (from JSONB column)
+      else if (typeof data.how_it_works_steps === 'object') {
+        // Some databases return JSONB as an object directly
+        parsedData.how_it_works_steps = data.how_it_works_steps;
+      }
     } catch (e) {
       console.error('Error parsing how_it_works_steps:', e);
       parsedData.how_it_works_steps = [];
