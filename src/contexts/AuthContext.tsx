@@ -1,10 +1,10 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { checkIfFirstUser, setUserAdminStatus } from '@/utils/adminUtils';
+import { removeFromCache, CACHE_KEYS } from '@/utils/cacheUtils';
 
 type Profile = {
   id: string;
@@ -35,22 +35,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         console.log('Auth state changed:', event, currentSession?.user?.id);
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
         
-        if (currentSession?.user) {
-          await fetchProfile(currentSession.user.id);
-        } else {
+        if (event === 'SIGNED_OUT') {
+          console.log('Signing out - clearing all user cache');
+          clearAllUserCache();
+          setSession(null);
+          setUser(null);
           setProfile(null);
+        } else {
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          
+          if (currentSession?.user) {
+            await fetchProfile(currentSession.user.id);
+          } else {
+            setProfile(null);
+          }
         }
       }
     );
 
-    // THEN check for existing session
     const initializeAuth = async () => {
       setIsLoading(true);
       try {
@@ -74,6 +81,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe();
     };
   }, []);
+
+  const clearAllUserCache = () => {
+    Object.values(CACHE_KEYS).forEach(key => {
+      removeFromCache(key);
+    });
+    
+    try {
+      localStorage.removeItem('supabase.auth.token');
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes('supabase') || key.includes('user') || key.includes('cache'))) {
+          localStorage.removeItem(key);
+        }
+      }
+    } catch (error) {
+      console.error('Error clearing localStorage:', error);
+    }
+  };
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -99,7 +124,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      // Check if this is the first user
       const isFirstUser = await checkIfFirstUser();
       console.log('Is first user:', isFirstUser);
       
@@ -117,7 +141,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
 
-      // If this is the first user, make them an admin
       if (isFirstUser && data.user) {
         await setUserAdminStatus(data.user.id, true);
       }
@@ -133,6 +156,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       console.log('Attempting to sign in:', email);
+      
+      clearAllUserCache();
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -145,7 +171,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       console.log('Sign in successful for user:', data.user?.id);
       
-      // Always fetch profile after successful sign in to ensure we have the latest data
       if (data.user) {
         await fetchProfile(data.user.id);
       }
@@ -161,7 +186,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithGoogle = async () => {
     try {
-      // Check if this is the first user (for admin privileges)
       const isFirstUser = await checkIfFirstUser();
       
       console.log("Starting Google sign-in process...");
@@ -173,7 +197,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           queryParams: {
             prompt: 'select_account',
             access_type: 'offline',
-            hd: 'domain.com', // Remove this line if you want to allow all domains
+            hd: 'domain.com',
           },
         },
       });
@@ -184,9 +208,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       console.log('Google sign in initiated, redirect URL:', data.url);
-      // User will be redirected to Google login
-      // After successful authentication, they'll be redirected back to our app
-      // and the onAuthStateChange event will trigger
     } catch (error: any) {
       console.error('Google sign in error details:', error);
       throw error;
@@ -195,15 +216,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      console.log('Signing out - clearing cache and session data');
+      
+      clearAllUserCache();
+      
       const { error } = await supabase.auth.signOut();
       if (error) {
         throw error;
       }
       
       setProfile(null);
+      setUser(null);
+      setSession(null);
+      
       toast.info('Logged out successfully');
       navigate('/');
     } catch (error: any) {
+      console.error('Error during sign out:', error);
       toast.error(error.message || 'Error signing out');
     }
   };
