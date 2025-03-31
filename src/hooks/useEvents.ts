@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Event } from '@/lib/types';
 import { getEvents } from '@/services/eventService';
-import { getFromCache, setInCache, removeFromCache, CACHE_KEYS, invalidateCacheByPrefix } from '@/utils/cacheUtils';
+import { getFromCache, setInCache, removeFromCache, CACHE_KEYS, invalidateCacheByPrefix, clearAllCache } from '@/utils/cacheUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -17,11 +17,11 @@ export const useEvents = () => {
     invalidateCacheByPrefix(CACHE_KEYS.EVENT_DETAILS);
   }, []);
 
-  const fetchEvents = useCallback(async (bypassCache = false) => {
+  const fetchEvents = useCallback(async (bypassCache = true) => { // Always bypass cache by default
     setIsLoading(true);
     
     try {
-      // Try to get events from cache first (if not bypassing)
+      // Only try to get events from cache if not bypassing
       const cachedEvents = !bypassCache ? getFromCache<Event[]>(CACHE_KEYS.EVENTS) : null;
       
       if (cachedEvents) {
@@ -43,8 +43,8 @@ export const useEvents = () => {
       
       setEvents(data);
       
-      // Cache the events for 5 minutes (shorter time because event data changes more frequently)
-      setInCache(CACHE_KEYS.EVENTS, data, 5);
+      // Cache the events for a very short time (1 minute)
+      setInCache(CACHE_KEYS.EVENTS, data, 1);
       setLastUpdated(Date.now());
       
     } catch (error) {
@@ -62,18 +62,21 @@ export const useEvents = () => {
   }, [fetchEvents, clearEventCache]);
 
   useEffect(() => {
-    // Initial fetch
-    fetchEvents();
+    // Initial fetch - always get fresh data
+    fetchEvents(true);
     
     // Listen for auth state changes to clear cache when user logs out
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
-        console.log('User signed out, clearing event cache');
-        clearEventCache();
+        console.log('User signed out, clearing all cache');
+        clearAllCache(); // Clear all cache on sign out
+      } else if (event === 'SIGNED_IN') {
+        console.log('User signed in, refreshing data');
+        refetchEvents(); // Refresh all data on sign in
       }
     });
 
-    // Set up realtime subscription for events table changes
+    // Set up realtime subscription for events table changes with immediate refresh
     const channel = supabase
       .channel('events-changes')
       .on(
@@ -100,12 +103,25 @@ export const useEvents = () => {
           refetchEvents();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+        // Do an immediate refresh when subscription is established
+        if (status === 'SUBSCRIBED') {
+          refetchEvents();
+        }
+      });
+
+    // Set up a periodic refresh (every 30 seconds)
+    const refreshInterval = setInterval(() => {
+      console.log('Performing periodic refresh');
+      refetchEvents();
+    }, 30000);
 
     // Clean up subscriptions when component unmounts
     return () => {
       subscription.unsubscribe();
       supabase.removeChannel(channel);
+      clearInterval(refreshInterval);
     };
   }, [fetchEvents, refetchEvents, clearEventCache]);
 

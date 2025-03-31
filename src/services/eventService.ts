@@ -58,15 +58,7 @@ export const getEvents = async (): Promise<Event[]> => {
 
 export const getEventById = async (eventId: string): Promise<Event | null> => {
   try {
-    // Try to get from cache first
-    const cacheKey = `${CACHE_KEYS.EVENT_DETAILS}${eventId}`;
-    const cachedEvent = getFromCache<Event>(cacheKey);
-    
-    if (cachedEvent) {
-      return cachedEvent;
-    }
-    
-    // If not in cache or expired, fetch from API
+    // Always fetch fresh data, bypassing cache
     const { data: event, error } = await supabase
       .from("events")
       .select("*")
@@ -102,8 +94,9 @@ export const getEventById = async (eventId: string): Promise<Event | null> => {
       })) as Session[]
     } as Event;
     
-    // Cache the event details for 5 minutes
-    setInCache(cacheKey, eventWithSessions, 5);
+    // Cache the event details for a very short time (1 minute)
+    const cacheKey = `${CACHE_KEYS.EVENT_DETAILS}${eventId}`;
+    setInCache(cacheKey, eventWithSessions, 1);
     
     return eventWithSessions;
   } catch (error) {

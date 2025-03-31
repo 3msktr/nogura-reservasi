@@ -1,18 +1,32 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
 import EventCard from '@/components/EventCard';
 import { useEvents } from '@/hooks/useEvents';
 import { useSettings } from '@/hooks/useSettings';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Trash2 } from 'lucide-react';
+import { clearAllCache } from '@/utils/cacheUtils';
+import { toast } from 'sonner';
 
 const Index: React.FC = () => {
   const { events, isLoading, refetchEvents } = useEvents();
   const { settings } = useSettings();
 
+  // Always fetch fresh data on page load
+  useEffect(() => {
+    refetchEvents();
+  }, [refetchEvents]);
+
   const handleRefresh = () => {
     refetchEvents();
+    toast.success('Data refreshed successfully');
+  };
+
+  const handleClearCache = () => {
+    clearAllCache();
+    window.location.reload();
+    toast.success('Cache cleared successfully');
   };
 
   return (
@@ -31,16 +45,27 @@ const Index: React.FC = () => {
           <div className="mt-12">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-semibold">Available Events</h2>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleRefresh} 
-                disabled={isLoading}
-                className="flex items-center gap-2"
-              >
-                <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
-                Refresh
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleClearCache} 
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 size={16} />
+                  Clear Cache
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleRefresh} 
+                  disabled={isLoading}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
+                  Refresh
+                </Button>
+              </div>
             </div>
             
             {isLoading ? (
