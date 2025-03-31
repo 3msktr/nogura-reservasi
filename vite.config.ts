@@ -15,10 +15,7 @@ export default defineConfig(({ mode }) => ({
     }
   },
   plugins: [
-    react({
-      // Disable React Fast Refresh which can cause caching issues
-      fastRefresh: false
-    }),
+    react(),
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),

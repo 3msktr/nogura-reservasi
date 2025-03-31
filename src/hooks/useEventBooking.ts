@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Event, Session } from '@/lib/types';
 import { toast } from 'sonner';
