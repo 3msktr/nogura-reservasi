@@ -20,15 +20,21 @@ export const useSettings = () => {
     const fetchSettings = async () => {
       setIsLoading(true);
       
-      // Always fetch fresh settings instead of using cache
-      removeFromCache(CACHE_KEYS.SETTINGS);
+      // Try to get settings from cache first
+      const cachedSettings = getFromCache<SiteSettings>(CACHE_KEYS.SETTINGS);
+      
+      if (cachedSettings) {
+        setSettings(cachedSettings);
+        setIsLoading(false);
+        return;
+      }
       
       // If not in cache or expired, fetch from API
       const data = await getSettings();
       setSettings(data);
       
-      // Cache the settings for a very short time (5 minutes)
-      setInCache(CACHE_KEYS.SETTINGS, data, 5);
+      // Cache the settings for 30 minutes
+      setInCache(CACHE_KEYS.SETTINGS, data, 30);
       
       setIsLoading(false);
     };
@@ -48,8 +54,7 @@ export const useSettings = () => {
         setSettings(newSettings);
         
         // Update cache with new settings
-        removeFromCache(CACHE_KEYS.SETTINGS); // Clear old cache
-        setInCache(CACHE_KEYS.SETTINGS, newSettings, 5);
+        setInCache(CACHE_KEYS.SETTINGS, newSettings, 30);
       }
       
       return result;

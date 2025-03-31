@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { getEventById } from '@/services/eventService';
 import { createReservation } from '@/services/reservationService';
-import { removeFromCache, CACHE_KEYS } from '@/utils/cacheUtils';
 
 interface UseEventBookingProps {
   eventId: string | undefined;
@@ -32,11 +31,6 @@ export const useEventBooking = ({ eventId }: UseEventBookingProps) => {
         toast.error("Event ID is missing");
         navigate("/");
         return;
-      }
-
-      // Clear the event cache before fetching
-      if (eventId) {
-        removeFromCache(`${CACHE_KEYS.EVENT_DETAILS}${eventId}`);
       }
 
       const eventData = await getEventById(eventId);
@@ -93,12 +87,14 @@ export const useEventBooking = ({ eventId }: UseEventBookingProps) => {
     }
   };
   
+  const selectedSessionData = getSelectedSessionData();
+  
   return {
     event,
     selectedSession,
     seatCount,
     isLoading,
-    selectedSessionData: getSelectedSessionData(),
+    selectedSessionData,
     showConfirmationForm,
     handleSessionChange,
     setSeatCount,
