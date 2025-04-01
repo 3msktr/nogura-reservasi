@@ -3,6 +3,7 @@ import React from 'react';
 import Layout from '@/components/Layout';
 import EventCard from '@/components/EventCard';
 import { useEvents } from '@/hooks/useEvents';
+import ClearSiteDataButton from '@/components/ClearSiteDataButton';
 
 const Index: React.FC = () => {
   const { events, isLoading } = useEvents();
@@ -17,8 +18,11 @@ const Index: React.FC = () => {
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
               Halal Artisan Ramen. Crafted from Scratch, Served in a Bowl.
-
             </p>
+          </div>
+          
+          <div className="flex justify-center mb-8">
+            <ClearSiteDataButton />
           </div>
           
           {isLoading ? (
