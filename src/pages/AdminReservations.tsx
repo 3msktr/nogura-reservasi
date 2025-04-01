@@ -5,7 +5,6 @@ import { Download, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import { useReservations } from '@/hooks/useReservations';
-import WhatsAppMessageDialog from '@/components/admin/WhatsAppMessageDialog';
 import DateFilterPopover from '@/components/admin/DateFilterPopover';
 import ActiveFilterDisplay from '@/components/admin/ActiveFilterDisplay';
 import ReservationsTable from '@/components/admin/ReservationsTable';
@@ -22,34 +21,20 @@ const AdminReservations = () => {
     setDateRange,
     showDateFilter,
     setShowDateFilter,
-    templates,
     clearDateFilter,
     handleUpdateStatus,
     handleEditReservation,
     handleDeleteReservation,
-    generateWhatsAppTemplate,
-    applyTemplateToReservation,
-    sendWhatsAppMessage,
+    sendWhatsAppWithLatestTemplate,
     exportToExcel
   } = useReservations();
 
-  const [showWhatsAppDialog, setShowWhatsAppDialog] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
-  const [whatsappMessage, setWhatsappMessage] = useState('');
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
-  
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleWhatsAppClick = (reservation: Reservation) => {
-    setSelectedReservation(reservation);
-    
-    // Use the default WhatsApp template when opening the dialog
-    const message = generateWhatsAppTemplate(reservation);
-    
-    setWhatsappMessage(message);
-    setSelectedTemplateId('');
-    setShowWhatsAppDialog(true);
+    sendWhatsAppWithLatestTemplate(reservation);
   };
 
   const handleEditClick = (reservation: Reservation) => {
@@ -60,22 +45,6 @@ const AdminReservations = () => {
   const handleDeleteClick = (reservation: Reservation) => {
     setSelectedReservation(reservation);
     setShowDeleteDialog(true);
-  };
-
-  const handleTemplateChange = (templateId: string) => {
-    setSelectedTemplateId(templateId);
-    
-    if (!selectedReservation) return;
-    
-    const message = applyTemplateToReservation(templateId, selectedReservation);
-    setWhatsappMessage(message);
-  };
-
-  const handleSendWhatsApp = () => {
-    if (!selectedReservation || !selectedReservation.phoneNumber) return;
-    
-    sendWhatsAppMessage(selectedReservation.phoneNumber, whatsappMessage);
-    setShowWhatsAppDialog(false);
   };
 
   return (
@@ -119,18 +88,6 @@ const AdminReservations = () => {
           onDeleteClick={handleDeleteClick}
         />
       </div>
-
-      {/* WhatsApp Dialog */}
-      <WhatsAppMessageDialog
-        open={showWhatsAppDialog}
-        onOpenChange={setShowWhatsAppDialog}
-        whatsappMessage={whatsappMessage}
-        setWhatsappMessage={setWhatsappMessage}
-        selectedTemplateId={selectedTemplateId}
-        setSelectedTemplateId={handleTemplateChange}
-        templates={templates}
-        onSend={handleSendWhatsApp}
-      />
 
       {/* Edit Reservation Dialog */}
       <EditReservationDialog

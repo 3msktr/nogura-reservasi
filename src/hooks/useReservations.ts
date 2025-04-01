@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Reservation, MessageTemplate } from '@/lib/types';
@@ -7,6 +8,7 @@ import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { formatDate, formatTime } from '@/utils/dateUtils';
 import { deleteReservation, updateReservation } from '@/services/reservationService';
+import { fetchLatestTemplate, getDefaultTemplateContent } from '@/services/templateService';
 
 interface ExtendedReservation extends Reservation {
   userName?: string;
@@ -21,11 +23,9 @@ export const useReservations = () => {
     to: undefined,
   });
   const [showDateFilter, setShowDateFilter] = useState(false);
-  const [templates, setTemplates] = useState<MessageTemplate[]>([]);
 
   useEffect(() => {
     fetchReservations();
-    fetchTemplates();
   }, []);
 
   useEffect(() => {
@@ -35,28 +35,6 @@ export const useReservations = () => {
       setFilteredReservations(reservations);
     }
   }, [dateRange, reservations]);
-
-  const fetchTemplates = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('message_templates')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      
-      const formattedTemplates: MessageTemplate[] = (data || []).map(template => ({
-        id: template.id,
-        name: template.name,
-        content: template.content,
-        created_at: template.created_at
-      }));
-      
-      setTemplates(formattedTemplates);
-    } catch (error) {
-      console.error('Error fetching templates:', error);
-    }
-  };
 
   const fetchReservations = async () => {
     try {
@@ -218,20 +196,15 @@ Please arrive 15 minutes before your scheduled time. We look forward to seeing y
 Best regards,
 The Event Team`;
   };
-  
-  const applyTemplateToReservation = (templateId: string, reservation: ExtendedReservation): string => {
-    if (!reservation) return '';
-    
-    const template = templates.find(t => t.id === templateId);
-    if (!template) return generateWhatsAppTemplate(reservation);
-    
+
+  const applyTemplateToReservation = (templateContent: string, reservation: ExtendedReservation): string => {
     const eventName = reservation.event?.name || 'our event';
     const eventDate = reservation.event?.date ? formatDate(reservation.event.date) : 'the scheduled date';
     const sessionTime = reservation.session?.time ? formatTime(reservation.session.time) : 'the scheduled time';
     const seats = reservation.numberOfSeats;
     const guestName = reservation.contactName || 'Guest';
     
-    let message = template.content;
+    let message = templateContent;
     message = message.replace(/\{guestName\}/g, guestName);
     message = message.replace(/\{eventName\}/g, eventName);
     message = message.replace(/\{eventDate\}/g, eventDate);
@@ -239,6 +212,34 @@ The Event Team`;
     message = message.replace(/\{seats\}/g, seats.toString());
     
     return message;
+  };
+
+  const sendWhatsAppWithLatestTemplate = async (reservation: ExtendedReservation) => {
+    if (!reservation.phoneNumber) {
+      toast.error("No phone number available for this reservation");
+      return;
+    }
+    
+    try {
+      // Get the latest template
+      const latestTemplate = await fetchLatestTemplate();
+      let messageContent;
+      
+      if (latestTemplate) {
+        // Apply the template to the reservation
+        messageContent = applyTemplateToReservation(latestTemplate.content, reservation);
+      } else {
+        // Use default template if none exists
+        messageContent = generateWhatsAppTemplate(reservation);
+      }
+      
+      // Send the WhatsApp message
+      sendWhatsAppMessage(reservation.phoneNumber, messageContent);
+      
+    } catch (error) {
+      console.error("Error sending WhatsApp message:", error);
+      toast.error("Failed to send WhatsApp message");
+    }
   };
 
   const sendWhatsAppMessage = (phoneNumber: string, message: string) => {
@@ -260,6 +261,7 @@ The Event Team`;
     const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
     
     window.open(whatsappUrl, '_blank');
+    toast.success("WhatsApp message ready to send");
   };
 
   const exportToExcel = () => {
@@ -302,13 +304,12 @@ The Event Team`;
     setDateRange,
     showDateFilter,
     setShowDateFilter,
-    templates,
     clearDateFilter,
     handleUpdateStatus,
     handleEditReservation,
     handleDeleteReservation,
     generateWhatsAppTemplate,
-    applyTemplateToReservation,
+    sendWhatsAppWithLatestTemplate,
     sendWhatsAppMessage,
     exportToExcel
   };

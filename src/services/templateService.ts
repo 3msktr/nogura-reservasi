@@ -37,6 +37,36 @@ export const fetchTemplate = async (): Promise<MessageTemplate | null> => {
   }
 };
 
+export const fetchLatestTemplate = async (): Promise<MessageTemplate | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('message_templates')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return null;
+    }
+
+    if (!data) {
+      return null;
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      content: data.content,
+      created_at: data.created_at
+    };
+  } catch (error) {
+    console.error('Error fetching latest template:', error);
+    return null;
+  }
+};
+
 export const createTemplate = async (name: string, content: string): Promise<MessageTemplate | null> => {
   try {
     const { data, error } = await supabase
