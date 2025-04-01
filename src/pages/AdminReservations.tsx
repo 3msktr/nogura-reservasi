@@ -9,6 +9,9 @@ import WhatsAppMessageDialog from '@/components/admin/WhatsAppMessageDialog';
 import DateFilterPopover from '@/components/admin/DateFilterPopover';
 import ActiveFilterDisplay from '@/components/admin/ActiveFilterDisplay';
 import ReservationsTable from '@/components/admin/ReservationsTable';
+import EditReservationDialog from '@/components/admin/EditReservationDialog';
+import DeleteReservationDialog from '@/components/admin/DeleteReservationDialog';
+import { Reservation } from '@/lib/types';
 
 const AdminReservations = () => {
   const navigate = useNavigate();
@@ -22,6 +25,8 @@ const AdminReservations = () => {
     templates,
     clearDateFilter,
     handleUpdateStatus,
+    handleEditReservation,
+    handleDeleteReservation,
     generateWhatsAppTemplate,
     applyTemplateToReservation,
     sendWhatsAppMessage,
@@ -29,11 +34,14 @@ const AdminReservations = () => {
   } = useReservations();
 
   const [showWhatsAppDialog, setShowWhatsAppDialog] = useState(false);
-  const [selectedReservation, setSelectedReservation] = useState<any>(null);
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [whatsappMessage, setWhatsappMessage] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const handleWhatsAppClick = (reservation: any) => {
+  const handleWhatsAppClick = (reservation: Reservation) => {
     setSelectedReservation(reservation);
     
     // Use the default WhatsApp template when opening the dialog
@@ -42,6 +50,16 @@ const AdminReservations = () => {
     setWhatsappMessage(message);
     setSelectedTemplateId('');
     setShowWhatsAppDialog(true);
+  };
+
+  const handleEditClick = (reservation: Reservation) => {
+    setSelectedReservation(reservation);
+    setShowEditDialog(true);
+  };
+
+  const handleDeleteClick = (reservation: Reservation) => {
+    setSelectedReservation(reservation);
+    setShowDeleteDialog(true);
   };
 
   const handleTemplateChange = (templateId: string) => {
@@ -97,9 +115,12 @@ const AdminReservations = () => {
           isLoading={isLoading}
           onUpdateStatus={handleUpdateStatus}
           onWhatsAppClick={handleWhatsAppClick}
+          onEditClick={handleEditClick}
+          onDeleteClick={handleDeleteClick}
         />
       </div>
 
+      {/* WhatsApp Dialog */}
       <WhatsAppMessageDialog
         open={showWhatsAppDialog}
         onOpenChange={setShowWhatsAppDialog}
@@ -109,6 +130,22 @@ const AdminReservations = () => {
         setSelectedTemplateId={handleTemplateChange}
         templates={templates}
         onSend={handleSendWhatsApp}
+      />
+
+      {/* Edit Reservation Dialog */}
+      <EditReservationDialog
+        open={showEditDialog}
+        reservation={selectedReservation}
+        onOpenChange={setShowEditDialog}
+        onSave={handleEditReservation}
+      />
+
+      {/* Delete Reservation Dialog */}
+      <DeleteReservationDialog
+        open={showDeleteDialog}
+        reservation={selectedReservation}
+        onOpenChange={setShowDeleteDialog}
+        onDelete={handleDeleteReservation}
       />
     </Layout>
   );

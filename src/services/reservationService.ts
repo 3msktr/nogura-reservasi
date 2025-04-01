@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Reservation } from "@/lib/types";
 import { toast } from "sonner";
@@ -23,7 +22,6 @@ export const getUserReservations = async (): Promise<Reservation[]> => {
 
     if (error) throw error;
     
-    // Map database column names to our interface properties
     return data.map(item => ({
       id: item.id,
       userId: item.userid,
@@ -42,10 +40,8 @@ export const getUserReservations = async (): Promise<Reservation[]> => {
   }
 };
 
-// New function to check if a user already has an active reservation for this event
 export const checkExistingReservation = async (eventId: string, isAdminOverride: boolean = false): Promise<boolean> => {
   try {
-    // If admin override is true, we skip the check and always return false (no existing reservation)
     if (isAdminOverride) {
       console.log("Admin override: skipping existing reservation check");
       return false;
@@ -68,7 +64,7 @@ export const checkExistingReservation = async (eventId: string, isAdminOverride:
 
     if (error) throw error;
     
-    return !!data; // Returns true if a reservation was found, false otherwise
+    return !!data;
   } catch (error) {
     console.error("Error checking existing reservation:", error);
     return false;
@@ -94,15 +90,12 @@ export const createReservation = async (
       return false;
     }
 
-    // Check if the user already has an active reservation for this event
-    // Pass the isAdminOverride flag to the check function
     const hasExistingReservation = await checkExistingReservation(eventId, isAdminOverride);
     if (hasExistingReservation) {
       toast.error("You already have a reservation for this event");
       return false;
     }
 
-    // First, check if there are enough available seats
     const { data: session, error: sessionError } = await supabase
       .from("sessions")
       .select("availableseats")
@@ -116,7 +109,6 @@ export const createReservation = async (
       return false;
     }
 
-    // If not an admin override, check if the event is open
     if (!isAdminOverride) {
       const { data: event, error: eventError } = await supabase
         .from("events")
@@ -134,7 +126,6 @@ export const createReservation = async (
       console.log("Admin override: skipping event.isopen check");
     }
 
-    // Create the reservation with contact information
     const { error } = await supabase.from("reservations").insert({
       userid: user.user.id,
       eventid: eventId,
@@ -148,7 +139,6 @@ export const createReservation = async (
 
     if (error) throw error;
 
-    // Update the available seats using our new function
     const { error: updateError } = await supabase.rpc('update_available_seats', {
       p_session_id: sessionId,
       p_seats_to_reduce: numberOfSeats
@@ -167,7 +157,6 @@ export const createReservation = async (
 
 export const cancelReservation = async (reservationId: string): Promise<boolean> => {
   try {
-    // Get the reservation details first to know how many seats to free up
     const { data: reservation, error: fetchError } = await supabase
       .from("reservations")
       .select("sessionid, numberofseats, status")
@@ -176,12 +165,10 @@ export const cancelReservation = async (reservationId: string): Promise<boolean>
 
     if (fetchError) throw fetchError;
     
-    // If already cancelled, don't proceed
     if (reservation.status === "cancelled") {
       return true;
     }
 
-    // Update the reservation status
     const { error } = await supabase
       .from("reservations")
       .update({ status: "cancelled" })
@@ -189,10 +176,9 @@ export const cancelReservation = async (reservationId: string): Promise<boolean>
 
     if (error) throw error;
 
-    // Free up the seats by using a negative value for p_seats_to_reduce
     const { error: updateError } = await supabase.rpc('update_available_seats', {
       p_session_id: reservation.sessionid,
-      p_seats_to_reduce: -reservation.numberofseats // negative to increase available seats
+      p_seats_to_reduce: -reservation.numberofseats
     });
 
     if (updateError) throw updateError;
@@ -202,6 +188,131 @@ export const cancelReservation = async (reservationId: string): Promise<boolean>
   } catch (error) {
     console.error("Error cancelling reservation:", error);
     toast.error("Failed to cancel reservation");
+    return false;
+  }
+};
+
+export const updateReservation = async (
+  reservationId: string, 
+  updates: {
+    numberOfSeats?: number;
+    contactName?: string;
+    phoneNumber?: string;
+    allergyNotes?: string;
+    status?: "confirmed" | "cancelled" | "pending";
+  }
+): Promise<boolean> => {
+  try {
+    const { data: currentReservation, error: fetchError } = await supabase
+      .from("reservations")
+      .select("numberofseats, sessionid, status")
+      .eq("id", reservationId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const updateData: any = {};
+    
+    if (updates.numberOfSeats !== undefined) {
+      updateData.numberofseats = updates.numberOfSeats;
+    }
+    
+    if (updates.contactName !== undefined) {
+      updateData.contact_name = updates.contactName;
+    }
+    
+    if (updates.phoneNumber !== undefined) {
+      updateData.phone_number = updates.phoneNumber ? `+62${updates.phoneNumber.replace(/^\+62/, '')}` : null;
+    }
+    
+    if (updates.allergyNotes !== undefined) {
+      updateData.allergy_notes = updates.allergyNotes;
+    }
+    
+    if (updates.status !== undefined) {
+      updateData.status = updates.status;
+    }
+
+    const { error } = await supabase
+      .from("reservations")
+      .update(updateData)
+      .eq("id", reservationId);
+
+    if (error) throw error;
+
+    if (updates.numberOfSeats !== undefined && updates.numberOfSeats !== currentReservation.numberofseats) {
+      const seatDifference = currentReservation.numberofseats - updates.numberOfSeats;
+      
+      if (currentReservation.status !== "cancelled" && updates.status !== "cancelled") {
+        const { error: updateSeatsError } = await supabase.rpc('update_available_seats', {
+          p_session_id: currentReservation.sessionid,
+          p_seats_to_reduce: seatDifference
+        });
+
+        if (updateSeatsError) throw updateSeatsError;
+      }
+    }
+
+    if (updates.status === "cancelled" && currentReservation.status !== "cancelled") {
+      const { error: updateSeatsError } = await supabase.rpc('update_available_seats', {
+        p_session_id: currentReservation.sessionid,
+        p_seats_to_reduce: -currentReservation.numberofseats
+      });
+
+      if (updateSeatsError) throw updateSeatsError;
+    }
+
+    if (currentReservation.status === "cancelled" && updates.status === "confirmed") {
+      const seatsToReduce = updates.numberOfSeats !== undefined ? updates.numberOfSeats : currentReservation.numberofseats;
+      
+      const { error: updateSeatsError } = await supabase.rpc('update_available_seats', {
+        p_session_id: currentReservation.sessionid,
+        p_seats_to_reduce: seatsToReduce
+      });
+
+      if (updateSeatsError) throw updateSeatsError;
+    }
+
+    toast.success("Reservation updated successfully");
+    return true;
+  } catch (error) {
+    console.error("Error updating reservation:", error);
+    toast.error("Failed to update reservation");
+    return false;
+  }
+};
+
+export const deleteReservation = async (reservationId: string): Promise<boolean> => {
+  try {
+    const { data: reservation, error: fetchError } = await supabase
+      .from("reservations")
+      .select("sessionid, numberofseats, status")
+      .eq("id", reservationId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const { error } = await supabase
+      .from("reservations")
+      .delete()
+      .eq("id", reservationId);
+
+    if (error) throw error;
+
+    if (reservation.status !== "cancelled") {
+      const { error: updateError } = await supabase.rpc('update_available_seats', {
+        p_session_id: reservation.sessionid,
+        p_seats_to_reduce: -reservation.numberofseats
+      });
+
+      if (updateError) throw updateError;
+    }
+
+    toast.success("Reservation deleted successfully");
+    return true;
+  } catch (error) {
+    console.error("Error deleting reservation:", error);
+    toast.error("Failed to delete reservation");
     return false;
   }
 };

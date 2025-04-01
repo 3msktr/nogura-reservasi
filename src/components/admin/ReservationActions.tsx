@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Check, X, MessageSquare, Eye } from 'lucide-react';
+import { Check, X, MessageSquare, Eye, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface ReservationActionsProps {
@@ -11,6 +11,8 @@ interface ReservationActionsProps {
   phoneNumber?: string;
   onUpdateStatus: (id: string, newStatus: 'confirmed' | 'cancelled') => void;
   onWhatsAppClick: () => void;
+  onEditClick: () => void;
+  onDeleteClick: () => void;
 }
 
 const ReservationActions = ({
@@ -19,7 +21,9 @@ const ReservationActions = ({
   status,
   phoneNumber,
   onUpdateStatus,
-  onWhatsAppClick
+  onWhatsAppClick,
+  onEditClick,
+  onDeleteClick
 }: ReservationActionsProps) => {
   const navigate = useNavigate();
 
@@ -45,6 +49,22 @@ const ReservationActions = ({
           <X className="h-4 w-4 text-red-500" />
         </Button>
       )}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onEditClick}
+        title="Edit Reservation"
+      >
+        <Edit className="h-4 w-4 text-blue-500" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onDeleteClick}
+        title="Delete Reservation"
+      >
+        <Trash2 className="h-4 w-4 text-red-500" />
+      </Button>
       {status === 'confirmed' && phoneNumber && (
         <Button
           variant="ghost"

@@ -22,13 +22,17 @@ interface ReservationsTableProps {
   isLoading: boolean;
   onUpdateStatus: (id: string, newStatus: 'confirmed' | 'cancelled') => void;
   onWhatsAppClick: (reservation: ExtendedReservation) => void;
+  onEditClick: (reservation: ExtendedReservation) => void;
+  onDeleteClick: (reservation: ExtendedReservation) => void;
 }
 
 const ReservationsTable = ({
   reservations,
   isLoading,
   onUpdateStatus,
-  onWhatsAppClick
+  onWhatsAppClick,
+  onEditClick,
+  onDeleteClick
 }: ReservationsTableProps) => {
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -120,6 +124,8 @@ const ReservationsTable = ({
                     phoneNumber={reservation.phoneNumber}
                     onUpdateStatus={onUpdateStatus}
                     onWhatsAppClick={() => onWhatsAppClick(reservation)}
+                    onEditClick={() => onEditClick(reservation)}
+                    onDeleteClick={() => onDeleteClick(reservation)}
                   />
                 </TableCell>
               </TableRow>

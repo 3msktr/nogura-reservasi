@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Reservation, MessageTemplate } from '@/lib/types';
@@ -7,6 +6,7 @@ import { DateRange } from 'react-day-picker';
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { formatDate, formatTime } from '@/utils/dateUtils';
+import { deleteReservation, updateReservation } from '@/services/reservationService';
 
 interface ExtendedReservation extends Reservation {
   userName?: string;
@@ -23,13 +23,11 @@ export const useReservations = () => {
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
 
-  // Fetch reservations and templates on component mount
   useEffect(() => {
     fetchReservations();
     fetchTemplates();
   }, []);
 
-  // Apply date filter when date range or reservations change
   useEffect(() => {
     if (dateRange.from || dateRange.to) {
       filterReservationsByDate();
@@ -151,39 +149,52 @@ export const useReservations = () => {
 
   const handleUpdateStatus = async (reservationId: string, newStatus: 'confirmed' | 'cancelled') => {
     try {
-      const reservation = reservations.find(r => r.id === reservationId);
-      if (!reservation) return;
-
-      const { error } = await supabase
-        .from('reservations')
-        .update({ status: newStatus })
-        .eq('id', reservationId);
-
-      if (error) throw error;
-
-      if (newStatus === 'cancelled' && reservation.status !== 'cancelled') {
-        const { error: updateError } = await supabase.rpc('update_available_seats', {
-          p_session_id: reservation.sessionId,
-          p_seats_to_reduce: -reservation.numberOfSeats
-        });
-
-        if (updateError) throw updateError;
+      const success = await updateReservation(reservationId, { status: newStatus });
+      if (success) {
+        fetchReservations();
       }
-
-      if (newStatus === 'confirmed' && reservation.status === 'cancelled') {
-        const { error: updateError } = await supabase.rpc('update_available_seats', {
-          p_session_id: reservation.sessionId,
-          p_seats_to_reduce: reservation.numberOfSeats
-        });
-
-        if (updateError) throw updateError;
-      }
-
-      toast.success(`Reservation ${newStatus === 'confirmed' ? 'confirmed' : 'cancelled'} successfully`);
-      fetchReservations();
     } catch (error) {
       console.error(`Error updating reservation:`, error);
       toast.error('Failed to update reservation');
+    }
+  };
+
+  const handleEditReservation = async (
+    reservationId: string,
+    updates: {
+      numberOfSeats?: number;
+      contactName?: string;
+      phoneNumber?: string;
+      allergyNotes?: string;
+      status?: "confirmed" | "cancelled" | "pending";
+    }
+  ) => {
+    try {
+      const success = await updateReservation(reservationId, updates);
+      if (success) {
+        fetchReservations();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error(`Error editing reservation:`, error);
+      toast.error('Failed to edit reservation');
+      return false;
+    }
+  };
+
+  const handleDeleteReservation = async (reservationId: string) => {
+    try {
+      const success = await deleteReservation(reservationId);
+      if (success) {
+        fetchReservations();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error(`Error deleting reservation:`, error);
+      toast.error('Failed to delete reservation');
+      return false;
     }
   };
 
@@ -294,6 +305,8 @@ The Event Team`;
     templates,
     clearDateFilter,
     handleUpdateStatus,
+    handleEditReservation,
+    handleDeleteReservation,
     generateWhatsAppTemplate,
     applyTemplateToReservation,
     sendWhatsAppMessage,
