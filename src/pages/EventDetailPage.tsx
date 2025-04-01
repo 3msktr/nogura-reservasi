@@ -205,7 +205,7 @@ const EventDetailPage: React.FC = () => {
                   </p>
                   <Button 
                     onClick={handleAdminBook}
-                    className="bg-amber-600 hover:bg-amber-700 text-white"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     Admin Book Now
                   </Button>

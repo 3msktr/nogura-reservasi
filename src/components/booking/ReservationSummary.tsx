@@ -65,19 +65,19 @@ const ReservationSummary: React.FC<ReservationSummaryProps> = ({
       </div>
       
       {!isEventOpen && isAdmin && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm">
-          <p className="font-medium text-amber-800 flex items-center gap-1">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm">
+          <p className="font-medium text-blue-800 flex items-center gap-1">
             <ShieldAlert className="h-4 w-4" />
             Admin Override
           </p>
-          <p className="text-amber-700">You can book this event even though it's not open for regular users.</p>
+          <p className="text-blue-700">You can book this event even though it's not open for regular users.</p>
         </div>
       )}
       
       <Button 
         onClick={onReservation}
         disabled={!isFormComplete || (isLoading || (!isEventOpen && !isAdmin))}
-        className="w-full"
+        className={`w-full ${isAdmin && !isEventOpen ? "bg-blue-600 hover:bg-blue-700" : ""}`}
       >
         {isAdmin && !isEventOpen ? "Admin Book Now" : "Proceed to Confirmation"}
         <ChevronRight className="ml-2 h-4 w-4" />

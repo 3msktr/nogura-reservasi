@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -11,6 +12,7 @@ import { toast } from 'sonner';
 import { checkExistingReservation } from '@/services/reservationService';
 import { subscribeToSessionUpdates } from '@/services/eventService';
 import { useAuth } from '@/contexts/AuthContext';
+import { ShieldAlert } from 'lucide-react';
 
 const BookingPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -115,6 +117,13 @@ const BookingPage: React.FC = () => {
     );
   }
   
+  // Calculate max seats for the selected session
+  const maxSeats = selectedSessionData 
+    ? (isAdmin 
+        ? selectedSessionData.availableSeats  // For admins, use all available seats
+        : Math.min(selectedSessionData.availableSeats, event.maxReservationsPerUser)) // For regular users, respect limit
+    : 1;
+  
   return (
     <Layout>
       <div className="container py-12 md:py-20">
@@ -173,11 +182,21 @@ const BookingPage: React.FC = () => {
                       <SeatSelector 
                         seatCount={seatCount}
                         setSeatCount={setSeatCount}
-                        maxSeats={Math.min(
-                          selectedSessionData?.availableSeats || 1, 
-                          event.maxReservationsPerUser
-                        )}
+                        maxSeats={maxSeats}
+                        isAdmin={isAdmin}
                       />
+                    )}
+                    
+                    {isAdmin && !event.isOpen && (
+                      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm font-medium text-blue-700 flex items-center gap-1">
+                          <ShieldAlert className="h-4 w-4" />
+                          Admin Override Active
+                        </p>
+                        <p className="text-xs text-blue-600">
+                          You can book this closed event and select up to the maximum available seats.
+                        </p>
+                      </div>
                     )}
                   </div>
                   
