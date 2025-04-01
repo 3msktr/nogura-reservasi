@@ -1,18 +1,23 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Calendar, Clock, Users, Lock, LockOpen, AlertCircle } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Calendar, Clock, Users, Lock, LockOpen, AlertCircle, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import { Event } from '@/lib/types';
 import { formatDate, formatTime } from '@/utils/dateUtils';
 import { getEventById, subscribeToSessionUpdates } from '@/services/eventService';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 const EventDetailPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const [event, setEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { isAdmin } = useAuth();
+  const navigate = useNavigate();
+  
+  console.log("EventDetailPage - isAdmin:", isAdmin);
   
   useEffect(() => {
     const fetchEvent = async () => {
@@ -104,6 +109,12 @@ const EventDetailPage: React.FC = () => {
   // Force the display status to closed if full booked
   const displayAsOpen = event.isOpen && !isFull;
   
+  const handleAdminBook = () => {
+    if (eventId) {
+      navigate(`/booking/${eventId}`);
+    }
+  };
+  
   return (
     <Layout>
       <div className="container py-12 md:py-20">
@@ -182,6 +193,24 @@ const EventDetailPage: React.FC = () => {
                   ))}
                 </div>
               </div>
+              
+              {isAdmin && !displayAsOpen && !isFull && (
+                <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <p className="font-medium text-amber-800 flex items-center gap-1 mb-2">
+                    <ShieldAlert className="h-4 w-4" />
+                    Admin Override Available
+                  </p>
+                  <p className="text-amber-700 mb-4 text-sm">
+                    As an admin, you can book this event even though it's not open for regular users.
+                  </p>
+                  <Button 
+                    onClick={handleAdminBook}
+                    className="bg-amber-600 hover:bg-amber-700 text-white"
+                  >
+                    Admin Book Now
+                  </Button>
+                </div>
+              )}
               
               {displayAsOpen ? (
                 <div className="mt-8">
