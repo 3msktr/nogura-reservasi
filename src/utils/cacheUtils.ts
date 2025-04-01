@@ -2,14 +2,10 @@
 interface CacheItem<T> {
   data: T;
   expiry: number;
-  version: string; // Add version tracking to cache items
 }
 
-// Cache version - will be updated whenever we need to invalidate all caches
-let CACHE_VERSION = Date.now().toString();
-
 /**
- * Checks if a cached item is still valid based on its expiry time and version
+ * Checks if a cached item is still valid based on its expiry time
  */
 const isCacheValid = <T>(key: string): boolean => {
   try {
@@ -17,9 +13,7 @@ const isCacheValid = <T>(key: string): boolean => {
     if (!cachedData) return false;
     
     const parsedData = JSON.parse(cachedData) as CacheItem<T>;
-    
-    // Check both expiry time and version
-    return parsedData.expiry > Date.now() && parsedData.version === CACHE_VERSION;
+    return parsedData.expiry > Date.now();
   } catch (error) {
     console.error('Error checking cache validity:', error);
     return false;
@@ -33,6 +27,7 @@ const isCacheValid = <T>(key: string): boolean => {
 export const getFromCache = <T>(key: string): T | null => {
   try {
     if (!isCacheValid<T>(key)) {
+      console.log(`Cache invalid or expired for key: ${key}`);
       return null;
     }
     
@@ -43,6 +38,7 @@ export const getFromCache = <T>(key: string): T | null => {
     return parsedData.data;
   } catch (error) {
     console.error('Error getting from cache:', error);
+    removeFromCache(key); // Remove corrupted cache entry
     return null;
   }
 };
@@ -55,11 +51,11 @@ export const setInCache = <T>(key: string, data: T, expiryMinutes: number): void
   try {
     const cacheItem: CacheItem<T> = {
       data,
-      expiry: Date.now() + (expiryMinutes * 60 * 1000),
-      version: CACHE_VERSION
+      expiry: Date.now() + (expiryMinutes * 60 * 1000)
     };
     
     localStorage.setItem(key, JSON.stringify(cacheItem));
+    console.log(`Data cached with key: ${key}, expires in ${expiryMinutes} minutes`);
   } catch (error) {
     console.error('Error setting cache:', error);
   }
@@ -71,6 +67,7 @@ export const setInCache = <T>(key: string, data: T, expiryMinutes: number): void
 export const removeFromCache = (key: string): void => {
   try {
     localStorage.removeItem(key);
+    console.log(`Cache removed for key: ${key}`);
   } catch (error) {
     console.error('Error removing from cache:', error);
   }
@@ -81,48 +78,40 @@ export const removeFromCache = (key: string): void => {
  */
 export const invalidateCacheByPrefix = (prefix: string): void => {
   try {
+    const keysToRemove: string[] = [];
+    
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.startsWith(prefix)) {
-        localStorage.removeItem(key);
+        keysToRemove.push(key);
       }
     }
+    
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+      console.log(`Cache removed for key with prefix match: ${key}`);
+    });
+    
+    if (keysToRemove.length > 0) {
+      console.log(`Invalidated ${keysToRemove.length} cache entries with prefix: ${prefix}`);
+    }
   } catch (error) {
-    console.error('Error invalidating cache:', error);
+    console.error('Error invalidating cache by prefix:', error);
   }
 };
 
 /**
- * Invalidates all cache entries by updating the cache version
- * This is more efficient than actually removing items from localStorage
- */
-export const invalidateAllCaches = (): void => {
-  CACHE_VERSION = Date.now().toString();
-  console.log('All caches invalidated with new version:', CACHE_VERSION);
-};
-
-/**
- * Clears all cache entries managed by our application
+ * Clears all application cache
  */
 export const clearAllCache = (): void => {
   try {
-    // Update cache version to invalidate all future reads
-    invalidateAllCaches();
-    
-    // Also remove items from localStorage to free up space
-    Object.keys(CACHE_KEYS).forEach(key => {
-      const cacheKey = CACHE_KEYS[key as keyof typeof CACHE_KEYS];
-      if (typeof cacheKey === 'string') {
-        // Check if it's a prefix key (ends with underscore)
-        if (cacheKey.endsWith('_')) {
-          // If it's a prefix key, use invalidateCacheByPrefix
-          invalidateCacheByPrefix(cacheKey);
-        } else {
-          // If it's a simple key, remove it directly
-          localStorage.removeItem(cacheKey);
-        }
+    Object.values(CACHE_KEYS).forEach(key => {
+      if (typeof key === 'string') {
+        removeFromCache(key);
+        invalidateCacheByPrefix(key);
       }
     });
+    console.log('All application cache cleared');
   } catch (error) {
     console.error('Error clearing all cache:', error);
   }
@@ -134,19 +123,4 @@ export const CACHE_KEYS = {
   EVENT_DETAILS: 'cache_event_',  // Will be used as prefix: cache_event_[eventId]
   SETTINGS: 'cache_settings',
   USER_RESERVATIONS: 'cache_user_reservations'
-};
-
-/**
- * Force reload current page bypassing the cache
- */
-export const forcePageReload = (): void => {
-  window.location.reload();
-};
-
-/**
- * Helper function to append cache busting query param to URLs
- */
-export const addCacheBustParam = (url: string): string => {
-  const separator = url.includes('?') ? '&' : '?';
-  return `${url}${separator}v=${Date.now()}`;
 };

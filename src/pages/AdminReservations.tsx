@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, MessageSquare } from 'lucide-react';
@@ -9,6 +8,7 @@ import WhatsAppMessageDialog from '@/components/admin/WhatsAppMessageDialog';
 import DateFilterPopover from '@/components/admin/DateFilterPopover';
 import ActiveFilterDisplay from '@/components/admin/ActiveFilterDisplay';
 import ReservationsTable from '@/components/admin/ReservationsTable';
+import { ExtendedReservation } from '@/services/reservationsService';
 
 const AdminReservations = () => {
   const navigate = useNavigate();
@@ -29,11 +29,11 @@ const AdminReservations = () => {
   } = useReservations();
 
   const [showWhatsAppDialog, setShowWhatsAppDialog] = useState(false);
-  const [selectedReservation, setSelectedReservation] = useState<any>(null);
+  const [selectedReservation, setSelectedReservation] = useState<ExtendedReservation | null>(null);
   const [whatsappMessage, setWhatsappMessage] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
 
-  const handleWhatsAppClick = (reservation: any) => {
+  const handleWhatsAppClick = (reservation: ExtendedReservation) => {
     setSelectedReservation(reservation);
     
     // Use the default WhatsApp template when opening the dialog

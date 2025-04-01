@@ -2,23 +2,27 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Event } from '@/lib/types';
 import { getEvents } from '@/services/eventService';
-import { getFromCache, setInCache, clearAllCache, CACHE_KEYS, invalidateAllCaches } from '@/utils/cacheUtils';
+import { getFromCache, setInCache, removeFromCache, CACHE_KEYS, invalidateCacheByPrefix } from '@/utils/cacheUtils';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export const useEvents = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [lastUpdated, setLastUpdated] = useState<number>(Date.now());
 
-  const fetchEvents = useCallback(async (forceRefresh = false) => {
-    // Always show loading indicator briefly when force refreshing
-    // This provides visual feedback even when using cached data
-    if (forceRefresh) {
-      setIsLoading(true);
-    }
+  const clearEventCache = useCallback(() => {
+    console.log('Clearing event cache');
+    removeFromCache(CACHE_KEYS.EVENTS);
+    invalidateCacheByPrefix(CACHE_KEYS.EVENT_DETAILS);
+  }, []);
+
+  const fetchEvents = useCallback(async (bypassCache = false) => {
+    setIsLoading(true);
     
-    // Try to get events from cache first, unless forceRefresh is true
-    if (!forceRefresh) {
-      const cachedEvents = getFromCache<Event[]>(CACHE_KEYS.EVENTS);
+    try {
+      // Try to get events from cache first (if not bypassing)
+      const cachedEvents = !bypassCache ? getFromCache<Event[]>(CACHE_KEYS.EVENTS) : null;
       
       if (cachedEvents) {
         console.log('Using cached events data');
@@ -26,47 +30,89 @@ export const useEvents = () => {
         setIsLoading(false);
         return;
       }
-    } else {
-      console.log('Force refreshing events data');
-    }
-    
-    try {
-      // If not in cache, forceRefresh is true, or cache expired, fetch from API
+      
+      console.log('Fetching fresh events data from API');
+      // If not in cache or expired, fetch from API
       const data = await getEvents();
+      
+      if (!data || data.length === 0) {
+        console.log('No events data received from API');
+      } else {
+        console.log(`Received ${data.length} events from API`);
+      }
+      
       setEvents(data);
       
-      // Cache the events for 1 minute (shorter time because event data changes more frequently)
-      setInCache(CACHE_KEYS.EVENTS, data, 1);
+      // Cache the events for 5 minutes (shorter time because event data changes more frequently)
+      setInCache(CACHE_KEYS.EVENTS, data, 5);
+      setLastUpdated(Date.now());
       
-      setIsLoading(false);
     } catch (error) {
       console.error('Error fetching events:', error);
       toast.error('Failed to load events. Please try refreshing the page.');
+    } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Function to force a refresh of the data
-  const refreshEvents = useCallback(() => {
-    // Invalidate the events cache before fetching
-    invalidateAllCaches();
+  // Force refetch events (for manual refresh)
+  const refetchEvents = useCallback(() => {
+    clearEventCache();
     return fetchEvents(true);
-  }, [fetchEvents]);
+  }, [fetchEvents, clearEventCache]);
 
   useEffect(() => {
+    // Initial fetch
     fetchEvents();
     
-    // Set up a polling mechanism to check for new events every 30 seconds
-    const intervalId = setInterval(() => {
-      fetchEvents(true);
-    }, 30000); // 30 seconds
-    
-    return () => clearInterval(intervalId);
-  }, [fetchEvents]);
+    // Listen for auth state changes to clear cache when user logs out
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        console.log('User signed out, clearing event cache');
+        clearEventCache();
+      }
+    });
+
+    // Set up realtime subscription for events table changes
+    const channel = supabase
+      .channel('events-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'events'
+        },
+        (payload) => {
+          console.log('Events table changed:', payload.eventType);
+          refetchEvents();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events
+          schema: 'public',
+          table: 'sessions'
+        },
+        (payload) => {
+          console.log('Sessions table changed:', payload.eventType);
+          refetchEvents();
+        }
+      )
+      .subscribe();
+
+    // Clean up subscriptions when component unmounts
+    return () => {
+      subscription.unsubscribe();
+      supabase.removeChannel(channel);
+    };
+  }, [fetchEvents, refetchEvents, clearEventCache]);
 
   return {
     events,
     isLoading,
-    refreshEvents
+    lastUpdated,
+    refetchEvents
   };
 };

@@ -1,8 +1,7 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { getSettings, updateSettings, SiteSettings } from '@/services/settingsService';
-import { getFromCache, setInCache, removeFromCache, clearAllCache, CACHE_KEYS, invalidateAllCaches } from '@/utils/cacheUtils';
-import { toast } from 'sonner';
+import { getFromCache, setInCache, removeFromCache, CACHE_KEYS } from '@/utils/cacheUtils';
 
 export const useSettings = () => {
   const [settings, setSettings] = useState<SiteSettings>({
@@ -17,44 +16,31 @@ export const useSettings = () => {
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const fetchSettings = useCallback(async (forceRefresh = false) => {
-    setIsLoading(true);
-    
-    // Try to get settings from cache first, unless forceRefresh is true
-    if (!forceRefresh) {
+  useEffect(() => {
+    const fetchSettings = async () => {
+      setIsLoading(true);
+      
+      // Try to get settings from cache first
       const cachedSettings = getFromCache<SiteSettings>(CACHE_KEYS.SETTINGS);
       
       if (cachedSettings) {
-        console.log('Using cached settings data');
         setSettings(cachedSettings);
         setIsLoading(false);
         return;
       }
-    } else {
-      console.log('Force refreshing settings data');
-    }
-    
-    try {
-      // If not in cache, forceRefresh is true, or expired, fetch from API
+      
+      // If not in cache or expired, fetch from API
       const data = await getSettings();
       setSettings(data);
       
-      // Cache the settings for 5 minutes
-      setInCache(CACHE_KEYS.SETTINGS, data, 5);
+      // Cache the settings for 30 minutes
+      setInCache(CACHE_KEYS.SETTINGS, data, 30);
       
       setIsLoading(false);
-    } catch (error) {
-      console.error('Error fetching settings:', error);
-      toast.error('Failed to load settings');
-      setIsLoading(false);
-    }
-  }, []);
+    };
 
-  // Function to force a refresh of the settings
-  const refreshSettings = useCallback(() => {
-    invalidateAllCaches();
-    return fetchSettings(true);
-  }, [fetchSettings]);
+    fetchSettings();
+  }, []);
 
   const saveSettings = async (updatedSettings: SiteSettings): Promise<{ success: boolean; error?: string }> => {
     try {
@@ -68,12 +54,7 @@ export const useSettings = () => {
         setSettings(newSettings);
         
         // Update cache with new settings
-        setInCache(CACHE_KEYS.SETTINGS, newSettings, 5);
-        
-        // Clear all caches after settings update to ensure fresh data
-        clearAllCache();
-        
-        toast.success('Settings saved successfully');
+        setInCache(CACHE_KEYS.SETTINGS, newSettings, 30);
       }
       
       return result;
@@ -83,14 +64,9 @@ export const useSettings = () => {
     }
   };
 
-  useEffect(() => {
-    fetchSettings();
-  }, [fetchSettings]);
-
   return {
     settings,
     isLoading,
-    saveSettings,
-    refreshSettings
+    saveSettings
   };
 };

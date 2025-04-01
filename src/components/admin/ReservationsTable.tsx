@@ -1,6 +1,4 @@
-
 import React from 'react';
-import { Reservation } from '@/lib/types';
 import {
   Table,
   TableBody,
@@ -12,10 +10,7 @@ import {
 import { Calendar, Clock, User } from 'lucide-react';
 import { formatDate, formatTime } from '@/utils/dateUtils';
 import ReservationActions from './ReservationActions';
-
-interface ExtendedReservation extends Reservation {
-  userName?: string;
-}
+import { ExtendedReservation } from '@/services/reservationsService';
 
 interface ReservationsTableProps {
   reservations: ExtendedReservation[];
