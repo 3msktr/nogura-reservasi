@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/auth";
 import Index from "./pages/Index";
 import BookingPage from "./pages/BookingPage";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -21,7 +21,7 @@ import EventDetailPage from "./pages/EventDetailPage";
 import AccountPage from "./pages/AccountPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
-import React from 'react'; // Make sure React is imported
+import React from 'react';
 
 const queryClient = new QueryClient();
 
