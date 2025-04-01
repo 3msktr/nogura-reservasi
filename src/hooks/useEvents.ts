@@ -10,7 +10,11 @@ export const useEvents = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const fetchEvents = useCallback(async (forceRefresh = false) => {
-    setIsLoading(true);
+    // Always show loading indicator briefly when force refreshing
+    // This provides visual feedback even when using cached data
+    if (forceRefresh) {
+      setIsLoading(true);
+    }
     
     // Try to get events from cache first, unless forceRefresh is true
     if (!forceRefresh) {

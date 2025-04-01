@@ -2,6 +2,7 @@
 import React from 'react';
 import Layout from '@/components/Layout';
 import EventCard from '@/components/EventCard';
+import LoadingSpinner from '@/components/ui/loading-spinner';
 import { useEvents } from '@/hooks/useEvents';
 import { useSettings } from '@/hooks/useSettings';
 
@@ -24,8 +25,8 @@ const Index: React.FC = () => {
           
           <div className="mt-12">
             {isLoading ? (
-              <div className="flex justify-center py-12">
-                <div className="animate-pulse text-lg">Loading events...</div>
+              <div className="py-20 flex flex-col items-center justify-center">
+                <LoadingSpinner size="lg" text="Loading events..." />
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
