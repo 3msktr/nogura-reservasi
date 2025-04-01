@@ -1,4 +1,21 @@
-// ... existing code ...
+'use client';
+import { useEffect } from 'react';
+import { setupCacheInvalidation } from '@/utils/cacheManager';
+
+export default function RootLayout({ children }) {
+  useEffect(() => {
+    setupCacheInvalidation();
+  }, []);
+
+  return (
+    <html lang="en">
+      <body>
+        {children}
+      </body>
+    </html>
+  );
+}
+
 export const metadata = {
   title: 'Nogura Reservasi',
   description: 'Nogura Reservasi System',
@@ -10,4 +27,3 @@ export const headers = {
   'Pragma': 'no-cache',
   'Expires': '0',
 }
-// ... existing code ...
