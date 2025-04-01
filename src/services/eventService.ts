@@ -124,9 +124,88 @@ export const subscribeToEventUpdates = (callback: (event: Event) => void) => {
         }
       }
     )
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'events',
+      },
+      async (payload) => {
+        console.log('New event created:', payload);
+        
+        // Fetch all events again to update the list
+        const events = await getEvents();
+        if (events && events.length > 0) {
+          // Return the newly created event if it exists
+          if (payload.new && payload.new.id) {
+            const newEvent = events.find(event => event.id === payload.new.id);
+            if (newEvent) {
+              callback(newEvent);
+            }
+          }
+        }
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'events',
+      },
+      (payload) => {
+        console.log('Event deleted:', payload);
+        // We'll handle this in the useEvents hook
+      }
+    )
     .subscribe();
 
   // Return unsubscribe function
+  return () => {
+    supabase.removeChannel(channel);
+  };
+};
+
+// Setup realtime subscription for sessions table
+export const subscribeToSessionUpdates = (eventId: string, callback: (sessions: Session[]) => void) => {
+  const channel = supabase
+    .channel(`sessions-channel-${eventId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+        schema: 'public',
+        table: 'sessions',
+        filter: `eventid=eq.${eventId}`
+      },
+      async () => {
+        // When any session changes, fetch all sessions for this event
+        const { data, error } = await supabase
+          .from('sessions')
+          .select('*')
+          .eq('eventid', eventId)
+          .order('time', { ascending: true });
+
+        if (error) {
+          console.error('Error fetching updated sessions:', error);
+          return;
+        }
+
+        // Map database column names to our interface properties
+        const updatedSessions = data.map(session => ({
+          id: session.id,
+          time: session.time,
+          availableSeats: session.availableseats,
+          totalSeats: session.totalseats,
+          eventId: session.eventid
+        })) as Session[];
+
+        callback(updatedSessions);
+      }
+    )
+    .subscribe();
+
   return () => {
     supabase.removeChannel(channel);
   };

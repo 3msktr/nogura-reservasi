@@ -26,7 +26,7 @@ const ClearSiteDataButton: React.FC = () => {
       }
 
       // Show success toast
-      toast("Data cleared successfully", {
+      toast.success("Data cleared successfully", {
         description: "Reloading page..."
       });
 
@@ -36,9 +36,8 @@ const ClearSiteDataButton: React.FC = () => {
       }, 1000);
     } catch (error) {
       console.error('Error clearing site data:', error);
-      toast("Error clearing data", {
-        description: "Please try again",
-        variant: "destructive"
+      toast.error("Error clearing data", {
+        description: "Please try again"
       });
     }
   };

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Event } from '@/lib/types';
+import { Event, Session } from '@/lib/types';
 import { getEvents, subscribeToEventUpdates } from '@/services/eventService';
 
 export const useEvents = () => {
@@ -24,11 +24,20 @@ export const useEvents = () => {
 
     // Subscribe to real-time updates for events
     const unsubscribe = subscribeToEventUpdates((updatedEvent) => {
-      setEvents(currentEvents => 
-        currentEvents.map(event => 
-          event.id === updatedEvent.id ? updatedEvent : event
-        )
-      );
+      setEvents(currentEvents => {
+        // Check if the event already exists in our state
+        const eventExists = currentEvents.some(event => event.id === updatedEvent.id);
+        
+        if (eventExists) {
+          // Update the existing event
+          return currentEvents.map(event => 
+            event.id === updatedEvent.id ? updatedEvent : event
+          );
+        } else {
+          // Add the new event to the list
+          return [...currentEvents, updatedEvent];
+        }
+      });
     });
 
     return () => {
