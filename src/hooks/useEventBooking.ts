@@ -83,15 +83,16 @@ export const useEventBooking = ({ eventId }: EventBookingProps) => {
 
     setIsLoading(true);
     try {
-      await createReservation({
-        userId: user.id,
-        eventId: event.id,
-        sessionId: selectedSession,
-        numberOfSeats: seatCount,
-        contactName: formData.contactName,
-        phoneNumber: formData.phoneNumber,
-        allergyNotes: formData.allergyNotes
-      });
+      await createReservation(
+        event.id,
+        selectedSession,
+        seatCount,
+        {
+          contactName: formData.contactName,
+          phoneNumber: formData.phoneNumber,
+          allergyNotes: formData.allergyNotes
+        }
+      );
 
       toast.success('Reservation created successfully!');
       setShowConfirmationForm(false);

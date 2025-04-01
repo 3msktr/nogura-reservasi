@@ -32,7 +32,7 @@ const ClearSiteDataButton: React.FC = () => {
 
       // Reload the page after a short delay
       setTimeout(() => {
-        window.location.reload(true);
+        window.location.reload();
       }, 1000);
     } catch (error) {
       console.error('Error clearing site data:', error);
