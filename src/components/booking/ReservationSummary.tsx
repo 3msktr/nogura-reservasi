@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Event, Session } from '@/lib/types';
 import { formatDate, formatTime } from '@/utils/dateUtils';
-import { CalendarClock, ChevronRight, Users } from 'lucide-react';
+import { CalendarClock, ChevronRight, Users, ShieldAlert } from 'lucide-react';
 
 interface ReservationSummaryProps {
   event: Event;
@@ -63,7 +63,10 @@ const ReservationSummary: React.FC<ReservationSummaryProps> = ({
       
       {!isEventOpen && isAdmin && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm">
-          <p className="font-medium text-amber-800">Admin Override</p>
+          <p className="font-medium text-amber-800 flex items-center gap-1">
+            <ShieldAlert className="h-4 w-4" />
+            Admin Override
+          </p>
           <p className="text-amber-700">You can book this event even though it's not open for regular users.</p>
         </div>
       )}
@@ -73,7 +76,7 @@ const ReservationSummary: React.FC<ReservationSummaryProps> = ({
         disabled={!isFormComplete || (isLoading || (!isEventOpen && !isAdmin))}
         className="w-full"
       >
-        Proceed to Confirmation
+        {isAdmin && !isEventOpen ? "Admin Book Now" : "Proceed to Confirmation"}
         <ChevronRight className="ml-2 h-4 w-4" />
       </Button>
     </div>

@@ -17,7 +17,9 @@ const BookingPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const [hasExistingReservation, setHasExistingReservation] = useState(false);
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
+  
+  console.log("BookingPage - isAdmin:", isAdmin);
   
   const {
     event,
@@ -35,8 +37,14 @@ const BookingPage: React.FC = () => {
   } = useEventBooking({ eventId, isAdmin });
   
   useEffect(() => {
+    if (!user) {
+      toast.error("You must be logged in to make a reservation");
+      navigate("/login");
+      return;
+    }
+    
     if (event) {
-      // If admin, allow booking even if event is not open
+      // Allow booking if admin, even if event is not open
       if (!event.isOpen && !isAdmin) {
         toast.error("This event is not open for reservations");
         navigate(`/event/${event.id}`);
@@ -52,7 +60,7 @@ const BookingPage: React.FC = () => {
         navigate(`/event/${event.id}`);
       }
     }
-  }, [event, navigate, isAdmin]);
+  }, [event, navigate, isAdmin, user]);
 
   useEffect(() => {
     const checkReservation = async () => {

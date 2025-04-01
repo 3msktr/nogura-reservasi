@@ -123,6 +123,8 @@ export const createReservation = async (
         toast.error("This event is not open for reservations");
         return false;
       }
+    } else {
+      console.log("Admin override: skipping event.isopen check");
     }
 
     // Create the reservation with contact information

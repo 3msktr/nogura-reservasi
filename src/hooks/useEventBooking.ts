@@ -88,6 +88,7 @@ export const useEventBooking = ({ eventId, isAdmin = false }: EventBookingProps)
       return;
     }
 
+    console.log('Initiating reservation with admin override:', isAdmin);
     setShowConfirmationForm(true);
   };
 
@@ -109,7 +110,8 @@ export const useEventBooking = ({ eventId, isAdmin = false }: EventBookingProps)
 
     setIsLoading(true);
     try {
-      await createReservation(
+      console.log('Creating reservation with admin override:', isAdmin);
+      const result = await createReservation(
         event.id,
         selectedSession,
         seatCount,
@@ -121,10 +123,14 @@ export const useEventBooking = ({ eventId, isAdmin = false }: EventBookingProps)
         isAdmin // Pass the admin override flag
       );
 
-      toast.success('Reservation created successfully!');
-      setShowConfirmationForm(false);
-      // Return to the event list or reservation list page
-      window.location.href = '/my-reservations';
+      if (result) {
+        toast.success('Reservation created successfully!');
+        setShowConfirmationForm(false);
+        // Return to the event list or reservation list page
+        window.location.href = '/my-reservations';
+      } else {
+        toast.error('Failed to create reservation');
+      }
     } catch (error) {
       console.error('Error creating reservation:', error);
       toast.error('Failed to create reservation');
