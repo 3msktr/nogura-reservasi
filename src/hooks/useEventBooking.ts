@@ -19,6 +19,8 @@ export const useEventBooking = ({ eventId, isAdmin = false }: EventBookingProps)
   const [seatCount, setSeatCount] = useState(1);
   const [showConfirmationForm, setShowConfirmationForm] = useState(false);
 
+  console.log("useEventBooking - isAdmin:", isAdmin);
+
   useEffect(() => {
     if (!eventId) return;
 

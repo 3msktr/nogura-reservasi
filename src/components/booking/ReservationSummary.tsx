@@ -25,6 +25,9 @@ const ReservationSummary: React.FC<ReservationSummaryProps> = ({
   const isEventOpen = event.isOpen;
   const isFormComplete = !!selectedSessionData && seatCount > 0;
   
+  console.log("ReservationSummary - isAdmin:", isAdmin);
+  console.log("ReservationSummary - isEventOpen:", isEventOpen);
+  
   return (
     <div className="bg-card border rounded-xl p-6 shadow-sm">
       <h3 className="text-lg font-semibold mb-4">Reservation Summary</h3>

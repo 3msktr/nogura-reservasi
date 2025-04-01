@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -20,6 +19,7 @@ const BookingPage: React.FC = () => {
   const { user, isAdmin } = useAuth();
   
   console.log("BookingPage - isAdmin:", isAdmin);
+  console.log("BookingPage - User:", user?.id);
   
   const {
     event,
@@ -73,7 +73,6 @@ const BookingPage: React.FC = () => {
     checkReservation();
   }, [eventId]);
   
-  // Subscribe to real-time session updates
   useEffect(() => {
     if (!eventId) return;
     
