@@ -16,12 +16,12 @@ const ClockButton: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Format time as HH:MM:SS
+  // Format time as HH:MM:SS AM/PM (12-hour format)
   const formattedTime = currentTime.toLocaleTimeString([], {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    hour12: false
+    hour12: true
   });
 
   return <Button variant="ghost" className="flex items-left gap-2 text-center">

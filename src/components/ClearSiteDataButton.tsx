@@ -43,9 +43,8 @@ const ClearSiteDataButton: React.FC = () => {
   };
   
   return (
-    <Button onClick={clearSiteData} variant="outline" className="flex items-center gap-2 text-right">
+    <Button onClick={clearSiteData} variant="outline" size="icon" className="h-10 w-10">
       <RefreshCw size={16} />
-      <span className="text-right">Reload Page</span>
     </Button>
   );
 };
