@@ -1,7 +1,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getSettings, updateSettings, SiteSettings } from '@/services/settingsService';
-import { getFromCache, setInCache, removeFromCache, clearAllCache, CACHE_KEYS } from '@/utils/cacheUtils';
+import { getFromCache, setInCache, removeFromCache, clearAllCache, CACHE_KEYS, invalidateAllCaches } from '@/utils/cacheUtils';
+import { toast } from 'sonner';
 
 export const useSettings = () => {
   const [settings, setSettings] = useState<SiteSettings>({
@@ -24,24 +25,34 @@ export const useSettings = () => {
       const cachedSettings = getFromCache<SiteSettings>(CACHE_KEYS.SETTINGS);
       
       if (cachedSettings) {
+        console.log('Using cached settings data');
         setSettings(cachedSettings);
         setIsLoading(false);
         return;
       }
+    } else {
+      console.log('Force refreshing settings data');
     }
     
-    // If not in cache, forceRefresh is true, or expired, fetch from API
-    const data = await getSettings();
-    setSettings(data);
-    
-    // Cache the settings for 10 minutes
-    setInCache(CACHE_KEYS.SETTINGS, data, 10);
-    
-    setIsLoading(false);
+    try {
+      // If not in cache, forceRefresh is true, or expired, fetch from API
+      const data = await getSettings();
+      setSettings(data);
+      
+      // Cache the settings for 5 minutes
+      setInCache(CACHE_KEYS.SETTINGS, data, 5);
+      
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+      toast.error('Failed to load settings');
+      setIsLoading(false);
+    }
   }, []);
 
   // Function to force a refresh of the settings
   const refreshSettings = useCallback(() => {
+    invalidateAllCaches();
     return fetchSettings(true);
   }, [fetchSettings]);
 
@@ -57,10 +68,12 @@ export const useSettings = () => {
         setSettings(newSettings);
         
         // Update cache with new settings
-        setInCache(CACHE_KEYS.SETTINGS, newSettings, 10);
+        setInCache(CACHE_KEYS.SETTINGS, newSettings, 5);
         
         // Clear all caches after settings update to ensure fresh data
         clearAllCache();
+        
+        toast.success('Settings saved successfully');
       }
       
       return result;
