@@ -9,7 +9,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -24,75 +23,101 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import { MessageSquare, Save } from 'lucide-react';
+import { Save, PlusCircle, MinusCircle } from 'lucide-react';
 import { MessageTemplate } from '@/lib/types';
 
 const AdminMessageTemplates = () => {
-  const [templates, setTemplates] = useState<MessageTemplate[]>([]);
+  const [template, setTemplate] = useState<MessageTemplate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentTemplate, setCurrentTemplate] = useState<MessageTemplate | null>(null);
+  const [placeholders, setPlaceholders] = useState<string[]>([
+    'guestName', 'eventName', 'eventDate', 'sessionTime', 'seats'
+  ]);
+  const [newPlaceholder, setNewPlaceholder] = useState('');
 
   const form = useForm({
     defaultValues: {
-      name: '',
+      name: 'Default Confirmation Template',
       content: '',
     }
   });
 
   useEffect(() => {
-    fetchTemplates();
+    fetchTemplate();
   }, []);
 
   useEffect(() => {
-    if (currentTemplate) {
+    if (template) {
       form.reset({
-        name: currentTemplate.name,
-        content: currentTemplate.content
+        name: template.name,
+        content: template.content
       });
     }
-  }, [currentTemplate, form]);
+  }, [template, form]);
 
-  const fetchTemplates = async () => {
+  const fetchTemplate = async () => {
     try {
       setIsLoading(true);
-      // Fetch templates from the Supabase table
+      // Fetch the main template (or first one if multiple exist)
       const { data, error } = await supabase
         .from('message_templates')
         .select('*')
-        .order('created_at', { ascending: false });
+        .limit(1)
+        .single();
 
       if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-
-      console.log('Templates fetched:', data);
-      
-      // Map the data to match our MessageTemplate type
-      const formattedTemplates: MessageTemplate[] = (data || []).map(template => ({
-        id: template.id,
-        name: template.name,
-        content: template.content,
-        created_at: template.created_at
-      }));
-
-      setTemplates(formattedTemplates);
-      
-      // Set the first template as current if available
-      if (formattedTemplates.length > 0) {
-        setCurrentTemplate(formattedTemplates[0]);
+        // If no template exists, create one
+        if (error.code === 'PGRST116') {
+          const defaultTemplate = getDefaultTemplate();
+          await createDefaultTemplate(defaultTemplate);
+          // Set the new template
+          setTemplate({
+            id: 'new',
+            name: 'Default Confirmation Template',
+            content: defaultTemplate,
+            created_at: new Date().toISOString()
+          });
+        } else {
+          console.error('Supabase error:', error);
+          throw error;
+        }
+      } else {
+        // Map the data to match our MessageTemplate type
+        setTemplate({
+          id: data.id,
+          name: data.name,
+          content: data.content,
+          created_at: data.created_at
+        });
       }
     } catch (error) {
-      console.error('Error fetching templates:', error);
-      toast.error('Failed to load message templates');
+      console.error('Error fetching template:', error);
+      toast.error('Failed to load message template');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const createDefaultTemplate = async (defaultContent: string) => {
+    try {
+      const { error } = await supabase
+        .from('message_templates')
+        .insert({
+          name: 'Default Confirmation Template',
+          content: defaultContent
+        });
+
+      if (error) throw error;
+      toast.success('Default template created');
+      fetchTemplate();
+    } catch (error) {
+      console.error('Error creating default template:', error);
+      toast.error('Failed to create default template');
+    }
+  };
+
   const handleSaveTemplate = async (values: { name: string; content: string }) => {
     try {
-      if (currentTemplate) {
+      if (template?.id && template.id !== 'new') {
         // Update existing template
         const { error } = await supabase
           .from('message_templates')
@@ -100,13 +125,20 @@ const AdminMessageTemplates = () => {
             name: values.name,
             content: values.content
           })
-          .eq('id', currentTemplate.id);
+          .eq('id', template.id);
 
         if (error) throw error;
         
         toast.success('Template updated successfully');
+        
+        // Update local state
+        setTemplate({
+          ...template,
+          name: values.name,
+          content: values.content
+        });
       } else {
-        // Create new template
+        // Create new template if somehow we don't have one
         const { error } = await supabase
           .from('message_templates')
           .insert({
@@ -117,26 +149,57 @@ const AdminMessageTemplates = () => {
         if (error) throw error;
         
         toast.success('Template created successfully');
+        fetchTemplate();
       }
-      
-      // Refresh templates
-      fetchTemplates();
     } catch (error) {
       console.error('Error saving template:', error);
       toast.error('Failed to save template');
     }
   };
 
-  const handleCreateNew = () => {
-    setCurrentTemplate(null);
-    form.reset({
-      name: '',
-      content: getDefaultTemplate()
-    });
+  const insertPlaceholder = (placeholder: string) => {
+    const textArea = document.querySelector('textarea');
+    const content = form.getValues('content');
+    const cursorPosition = textArea?.selectionStart || content.length;
+    
+    const textBefore = content.substring(0, cursorPosition);
+    const textAfter = content.substring(cursorPosition);
+    
+    const newContent = `${textBefore}{${placeholder}}${textAfter}`;
+    form.setValue('content', newContent);
+    
+    // Focus back on textarea and set cursor position after the inserted placeholder
+    if (textArea) {
+      setTimeout(() => {
+        textArea.focus();
+        const newPosition = cursorPosition + placeholder.length + 2; // +2 for the curly braces
+        textArea.setSelectionRange(newPosition, newPosition);
+      }, 0);
+    }
   };
 
-  const handleSelectTemplate = (template: MessageTemplate) => {
-    setCurrentTemplate(template);
+  const addNewPlaceholder = () => {
+    if (!newPlaceholder.trim()) {
+      toast.error('Please enter a placeholder name');
+      return;
+    }
+    
+    if (placeholders.includes(newPlaceholder)) {
+      toast.error('This placeholder already exists');
+      return;
+    }
+    
+    setPlaceholders([...placeholders, newPlaceholder]);
+    setNewPlaceholder('');
+  };
+  
+  const removePlaceholder = (placeholder: string) => {
+    if (['guestName', 'eventName', 'eventDate', 'sessionTime', 'seats'].includes(placeholder)) {
+      toast.error('Cannot remove default placeholders');
+      return;
+    }
+    
+    setPlaceholders(placeholders.filter(p => p !== placeholder));
   };
 
   const getDefaultTemplate = (): string => {
@@ -158,114 +221,116 @@ The Event Team`;
     <Layout>
       <div className="container py-20">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Message Templates</h1>
-          <Button onClick={handleCreateNew}>
-            <MessageSquare className="mr-2 h-4 w-4" />
-            New Template
-          </Button>
+          <h1 className="text-3xl font-bold">Message Template</h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Available Templates</CardTitle>
-                <CardDescription>
-                  Select a template to edit or create a new one
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <div className="flex justify-center p-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {templates.length === 0 ? (
-                      <p className="text-muted-foreground text-sm py-2">No templates found. Create your first template.</p>
-                    ) : (
-                      templates.map((template) => (
-                        <div
-                          key={template.id}
-                          className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                            currentTemplate?.id === template.id
-                              ? 'bg-primary/10 border border-primary/30'
-                              : 'hover:bg-muted'
-                          }`}
-                          onClick={() => handleSelectTemplate(template)}
-                        >
-                          <h3 className="font-medium">{template.name}</h3>
-                          <p className="text-xs text-muted-foreground mt-1 truncate">
-                            {template.content.substring(0, 50)}...
-                          </p>
-                        </div>
-                      ))
+        <Card>
+          <CardHeader>
+            <CardTitle>WhatsApp Message Template</CardTitle>
+            <CardDescription>
+              Customize your message template with placeholders for dynamic content
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex justify-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleSaveTemplate)} className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Template Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="E.g., Default Confirmation" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          A descriptive name for this message template
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
                     )}
+                  />
+
+                  <div className="bg-muted p-4 rounded-md mb-4">
+                    <div className="font-medium mb-2">Available Placeholders</div>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {placeholders.map(placeholder => (
+                        <div 
+                          key={placeholder} 
+                          className="flex items-center bg-background border px-2 py-1 rounded-md text-sm"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => insertPlaceholder(placeholder)}
+                            className="mr-1 hover:text-primary"
+                          >
+                            {`{${placeholder}}`}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removePlaceholder(placeholder)}
+                            className="text-destructive ml-1"
+                          >
+                            <MinusCircle size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Input
+                        value={newPlaceholder}
+                        onChange={(e) => setNewPlaceholder(e.target.value)}
+                        placeholder="New placeholder name"
+                        className="flex-grow"
+                      />
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={addNewPlaceholder}
+                        size="sm"
+                      >
+                        <PlusCircle size={16} className="mr-1" />
+                        Add
+                      </Button>
+                    </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
 
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>{currentTemplate ? 'Edit Template' : 'New Template'}</CardTitle>
-                <CardDescription>
-                  Customize your confirmation message template. Use placeholders like {'{guestName}'}, {'{eventName}'}, etc.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(handleSaveTemplate)} className="space-y-6">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Template Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="E.g., Default Confirmation" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            A descriptive name for this message template
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <FormField
+                    control={form.control}
+                    name="content"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Message Content</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Enter your template message here..."
+                            className="min-h-[300px] font-mono text-sm"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Click a placeholder above to insert it at the cursor position
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    <FormField
-                      control={form.control}
-                      name="content"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Message Content</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Enter your template message here..."
-                              className="min-h-[300px] font-mono text-sm"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            You can use these placeholders: {'{guestName}'}, {'{eventName}'}, {'{eventDate}'}, {'{sessionTime}'}, {'{seats}'}
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <Button type="submit" className="w-full">
-                      <Save className="mr-2 h-4 w-4" />
-                      Save Template
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                  <Button type="submit" className="w-full">
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Template
+                  </Button>
+                </form>
+              </Form>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   );
