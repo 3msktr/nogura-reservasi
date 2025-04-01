@@ -93,11 +93,14 @@ export const clearAllCache = (): void => {
     Object.keys(CACHE_KEYS).forEach(key => {
       const cacheKey = CACHE_KEYS[key as keyof typeof CACHE_KEYS];
       if (typeof cacheKey === 'string') {
-        // If it's a simple key, remove it directly
-        localStorage.removeItem(cacheKey);
-      } else if (typeof cacheKey === 'string' && cacheKey.endsWith('_')) {
-        // If it's a prefix key, use invalidateCacheByPrefix
-        invalidateCacheByPrefix(cacheKey);
+        // Check if it's a prefix key (ends with underscore)
+        if (cacheKey.endsWith('_')) {
+          // If it's a prefix key, use invalidateCacheByPrefix
+          invalidateCacheByPrefix(cacheKey);
+        } else {
+          // If it's a simple key, remove it directly
+          localStorage.removeItem(cacheKey);
+        }
       }
     });
   } catch (error) {
