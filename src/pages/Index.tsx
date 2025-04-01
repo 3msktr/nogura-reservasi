@@ -1,8 +1,11 @@
+
 import React from 'react';
 import Layout from '@/components/Layout';
 import EventCard from '@/components/EventCard';
 import { useEvents } from '@/hooks/useEvents';
 import ClearSiteDataButton from '@/components/ClearSiteDataButton';
+import ClockButton from '@/components/ClockButton';
+
 const Index: React.FC = () => {
   const {
     events,
@@ -18,7 +21,8 @@ const Index: React.FC = () => {
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">Halal Artisan Ramen</p>
           </div>
           
-          <div className="flex justify-right mb-3">
+          <div className="flex justify-end mb-3 gap-3">
+            <ClockButton />
             <ClearSiteDataButton />
           </div>
           
