@@ -1,43 +1,36 @@
-
 import React from 'react';
 import Layout from '@/components/Layout';
 import EventCard from '@/components/EventCard';
 import { useEvents } from '@/hooks/useEvents';
 import ClearSiteDataButton from '@/components/ClearSiteDataButton';
-
 const Index: React.FC = () => {
-  const { events, isLoading } = useEvents();
-
-  return (
-    <Layout>
+  const {
+    events,
+    isLoading
+  } = useEvents();
+  return <Layout>
       <section className="relative py-20 px-4 md:py-32 overflow-hidden">
         <div className="container max-w-7xl mx-auto">
-          <div className="text-center mb-16 animate-fade-in">
+          <div className="text-center mb-8 animate-fade-in">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
               Reservasi Nogura
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Halal Artisan Ramen. Crafted from Scratch, Served in a Bowl.
-            </p>
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">Halal Artisan Ramen</p>
           </div>
           
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-3">
             <ClearSiteDataButton />
           </div>
           
-          {isLoading ? (
-            <div className="flex justify-center py-12">
+          {isLoading ? <div className="flex justify-center py-12">
               <div className="animate-pulse text-lg">Loading events...</div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {events.map((event, index) => (
-                <div key={event.id} style={{ animationDelay: `${index * 100}ms` }}>
+            </div> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {events.map((event, index) => <div key={event.id} style={{
+            animationDelay: `${index * 100}ms`
+          }}>
                   <EventCard event={event} />
-                </div>
-              ))}
-            </div>
-          )}
+                </div>)}
+            </div>}
         </div>
       </section>
       
@@ -71,8 +64,6 @@ const Index: React.FC = () => {
           </div>
         </div>
       </section>
-    </Layout>
-  );
+    </Layout>;
 };
-
 export default Index;
