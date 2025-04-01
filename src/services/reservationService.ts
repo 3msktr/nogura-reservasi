@@ -2,7 +2,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Reservation } from "@/lib/types";
 import { toast } from "sonner";
-import { getFromCache, setInCache, removeFromCache, CACHE_KEYS } from "@/utils/cacheUtils";
 
 export const getUserReservations = async (): Promise<Reservation[]> => {
   try {
@@ -10,14 +9,6 @@ export const getUserReservations = async (): Promise<Reservation[]> => {
     
     if (!user.user) {
       throw new Error("User not authenticated");
-    }
-
-    // Try to get from cache first
-    const cacheKey = `${CACHE_KEYS.USER_RESERVATIONS}_${user.user.id}`;
-    const cachedReservations = getFromCache<Reservation[]>(cacheKey);
-    
-    if (cachedReservations) {
-      return cachedReservations;
     }
 
     const { data, error } = await supabase
@@ -33,7 +24,7 @@ export const getUserReservations = async (): Promise<Reservation[]> => {
     if (error) throw error;
     
     // Map database column names to our interface properties
-    const mappedReservations = data.map(item => ({
+    return data.map(item => ({
       id: item.id,
       userId: item.userid,
       eventId: item.eventid,
@@ -42,16 +33,8 @@ export const getUserReservations = async (): Promise<Reservation[]> => {
       status: item.status,
       createdAt: item.created_at,
       event: item.event,
-      session: item.session,
-      contactName: item.contact_name,
-      phoneNumber: item.phone_number,
-      allergyNotes: item.allergy_notes
+      session: item.session
     })) as Reservation[];
-    
-    // Cache the user's reservations for 5 minutes
-    setInCache(cacheKey, mappedReservations, 5);
-    
-    return mappedReservations;
   } catch (error) {
     console.error("Error fetching user reservations:", error);
     toast.error("Failed to load your reservations");
@@ -147,11 +130,6 @@ export const createReservation = async (
 
     if (updateError) throw updateError;
 
-    // Invalidate caches that are now stale
-    removeFromCache(`${CACHE_KEYS.USER_RESERVATIONS}_${user.user.id}`);
-    removeFromCache(`${CACHE_KEYS.EVENT_DETAILS}${eventId}`);
-    removeFromCache(CACHE_KEYS.EVENTS);
-
     toast.success("Reservation confirmed successfully!");
     return true;
   } catch (error) {
@@ -192,15 +170,6 @@ export const cancelReservation = async (reservationId: string): Promise<boolean>
     });
 
     if (updateError) throw updateError;
-
-    // Invalidate relevant caches
-    const { data: user } = await supabase.auth.getUser();
-    if (user.user) {
-      removeFromCache(`${CACHE_KEYS.USER_RESERVATIONS}_${user.user.id}`);
-    }
-    
-    // We don't know the event ID here, so we invalidate all event caches
-    removeFromCache(CACHE_KEYS.EVENTS);
 
     toast.success("Reservation cancelled successfully");
     return true;

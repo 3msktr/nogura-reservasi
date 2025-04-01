@@ -21,7 +21,6 @@ import EventDetailPage from "./pages/EventDetailPage";
 import AccountPage from "./pages/AccountPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
-import AdminSettingsPage from "./components/admin/AdminSettingsPage";
 import React from 'react'; // Make sure React is imported
 
 const queryClient = new QueryClient();
@@ -66,11 +65,6 @@ const App = () => (
               <Route path="/admin/message-templates" element={
                 <AdminRoute>
                   <AdminMessageTemplates />
-                </AdminRoute>
-              } />
-              <Route path="/admin/settings" element={
-                <AdminRoute>
-                  <AdminSettingsPage />
                 </AdminRoute>
               } />
               <Route path="/login" element={<Login />} />
