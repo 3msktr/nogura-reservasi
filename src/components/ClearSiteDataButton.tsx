@@ -1,11 +1,10 @@
+
 import React from 'react';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+
 const ClearSiteDataButton: React.FC = () => {
-  const {
-    toast
-  } = useToast();
   const clearSiteData = async () => {
     try {
       // 1. Unregister service worker
@@ -27,8 +26,7 @@ const ClearSiteDataButton: React.FC = () => {
       }
 
       // Show success toast
-      toast({
-        title: "Data cleared successfully",
+      toast("Data cleared successfully", {
         description: "Reloading page..."
       });
 
@@ -38,16 +36,19 @@ const ClearSiteDataButton: React.FC = () => {
       }, 1000);
     } catch (error) {
       console.error('Error clearing site data:', error);
-      toast({
-        title: "Error clearing data",
+      toast("Error clearing data", {
         description: "Please try again",
         variant: "destructive"
       });
     }
   };
-  return <Button onClick={clearSiteData} variant="outline" className="flex items-center gap-2 text-right">
+  
+  return (
+    <Button onClick={clearSiteData} variant="outline" className="flex items-center gap-2 text-right">
       <RefreshCw size={16} />
       <span className="text-right">Reload Page</span>
-    </Button>;
+    </Button>
+  );
 };
+
 export default ClearSiteDataButton;

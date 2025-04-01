@@ -97,3 +97,37 @@ export const getEventById = async (eventId: string): Promise<Event | null> => {
     return null;
   }
 };
+
+// Setup realtime subscription for events table
+export const subscribeToEventUpdates = (callback: (event: Event) => void) => {
+  // Enable realtime for the events table
+  const channel = supabase
+    .channel('events-channel')
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'events',
+      },
+      async (payload) => {
+        console.log('Event updated:', payload);
+        
+        // When an event is updated, fetch the complete event with sessions
+        if (payload.new && payload.new.id) {
+          const eventId = payload.new.id;
+          const updatedEvent = await getEventById(eventId);
+          
+          if (updatedEvent) {
+            callback(updatedEvent);
+          }
+        }
+      }
+    )
+    .subscribe();
+
+  // Return unsubscribe function
+  return () => {
+    supabase.removeChannel(channel);
+  };
+};
