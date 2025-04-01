@@ -1,8 +1,12 @@
+
 import React from 'react';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
+
 const ClearSiteDataButton: React.FC = () => {
+  const { toast } = useToast();
+
   const clearSiteData = async () => {
     try {
       // 1. Unregister service worker
@@ -49,9 +53,13 @@ const ClearSiteDataButton: React.FC = () => {
       });
     }
   };
-  return <Button onClick={clearSiteData} variant="outline" className="flex items-center gap-2">
+
+  return (
+    <Button onClick={clearSiteData} variant="outline" className="flex items-center gap-2">
       <RefreshCw size={16} />
-      <span>Refresh</span>
-    </Button>;
+      <span>Clear Site Data</span>
+    </Button>
+  );
 };
+
 export default ClearSiteDataButton;
