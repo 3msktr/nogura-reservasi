@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
@@ -12,15 +11,14 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { signIn, signInWithGoogle, user } = useAuth();
 
-  // Get the redirect path from location state or default to home
   const from = location.state?.from?.pathname || '/';
 
   useEffect(() => {
-    // Redirect if user is already logged in
     if (user) {
       console.log('Login - User already logged in, redirecting to:', from);
       navigate(from, { replace: true });
@@ -40,7 +38,6 @@ const Login: React.FC = () => {
 
     try {
       await signIn(email, password);
-      // Navigation is handled in the useEffect hook above
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error.message || 'Failed to log in. Please check your credentials.');
@@ -51,14 +48,26 @@ const Login: React.FC = () => {
 
   const handleGoogleSignIn = async () => {
     try {
-      setIsLoading(true);
+      setOauthLoading(true);
+      console.log("Starting Google sign-in process...");
+      
       await signInWithGoogle();
-      // Navigation is handled in the useEffect hook above
     } catch (error: any) {
       console.error('Google sign in error:', error);
-      toast.error(error.message || 'Failed to log in with Google.');
+      
+      if (error.message?.includes("invalid_request")) {
+        toast.error("Invalid request. Please check your Supabase URL configuration.");
+      } else if (error.message?.includes("invalid_client")) {
+        toast.error("OAuth configuration error. Please verify your Google client ID and secret in Supabase.");
+      } else if (error.message?.includes("redirect_uri_mismatch")) {
+        toast.error("Redirect URI mismatch. Please ensure your redirect URLs are correctly configured in Google Console.");
+      } else if (error.message?.includes("consent_required")) {
+        toast.error("Google requires consent. Please check your Google OAuth setup in Google Cloud Console.");
+      } else {
+        toast.error(error.message || 'Failed to log in with Google.');
+      }
     } finally {
-      setIsLoading(false);
+      setOauthLoading(false);
     }
   };
 
@@ -136,7 +145,7 @@ const Login: React.FC = () => {
               variant="outline"
               className="w-full flex items-center justify-center gap-2"
               onClick={handleGoogleSignIn}
-              disabled={isLoading}
+              disabled={isLoading || oauthLoading}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" className="w-5 h-5">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -145,7 +154,7 @@ const Login: React.FC = () => {
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                 <path fill="none" d="M1 1h22v22H1z" />
               </svg>
-              Sign in with Google
+              {oauthLoading ? 'Connecting...' : 'Sign in with Google'}
             </Button>
 
             <div className="text-center text-sm">
