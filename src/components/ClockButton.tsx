@@ -1,11 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
 const ClockButton: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
-
   useEffect(() => {
     // Update the time every second
     const interval = setInterval(() => {
@@ -16,18 +13,16 @@ const ClockButton: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Format time as HH:MM:SS AM/PM (12-hour format)
+  // Format time as HH:MM:SS
   const formattedTime = currentTime.toLocaleTimeString([], {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    hour12: true
+    hour12: false
   });
-
   return <Button variant="ghost" className="flex items-left gap-2 text-center">
       <Clock size={16} />
-      <span>{formattedTime}</span>
+      <span className="text-base font-semibold">{formattedTime}</span>
     </Button>;
 };
-
 export default ClockButton;
