@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Reservation, MessageTemplate } from '@/lib/types';
@@ -261,7 +260,6 @@ The Event Team`;
     const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
     
     window.open(whatsappUrl, '_blank');
-    toast.success("WhatsApp message ready to send");
   };
 
   const exportToExcel = () => {
