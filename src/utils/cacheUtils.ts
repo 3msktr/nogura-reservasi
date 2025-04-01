@@ -85,6 +85,26 @@ export const invalidateCacheByPrefix = (prefix: string): void => {
   }
 };
 
+/**
+ * Invalidates all cache entries
+ */
+export const clearAllCache = (): void => {
+  try {
+    Object.keys(CACHE_KEYS).forEach(key => {
+      const cacheKey = CACHE_KEYS[key as keyof typeof CACHE_KEYS];
+      if (typeof cacheKey === 'string') {
+        // If it's a simple key, remove it directly
+        localStorage.removeItem(cacheKey);
+      } else if (cacheKey.endsWith('_')) {
+        // If it's a prefix key, use invalidateCacheByPrefix
+        invalidateCacheByPrefix(cacheKey);
+      }
+    });
+  } catch (error) {
+    console.error('Error clearing all cache:', error);
+  }
+};
+
 // Cache key constants for different types of data
 export const CACHE_KEYS = {
   EVENTS: 'cache_events',

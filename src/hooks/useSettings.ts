@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getSettings, updateSettings, SiteSettings } from '@/services/settingsService';
-import { getFromCache, setInCache, removeFromCache, CACHE_KEYS } from '@/utils/cacheUtils';
+import { getFromCache, setInCache, removeFromCache, clearAllCache, CACHE_KEYS } from '@/utils/cacheUtils';
 
 export const useSettings = () => {
   const [settings, setSettings] = useState<SiteSettings>({
@@ -16,11 +16,11 @@ export const useSettings = () => {
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    const fetchSettings = async () => {
-      setIsLoading(true);
-      
-      // Try to get settings from cache first
+  const fetchSettings = useCallback(async (forceRefresh = false) => {
+    setIsLoading(true);
+    
+    // Try to get settings from cache first, unless forceRefresh is true
+    if (!forceRefresh) {
       const cachedSettings = getFromCache<SiteSettings>(CACHE_KEYS.SETTINGS);
       
       if (cachedSettings) {
@@ -28,19 +28,22 @@ export const useSettings = () => {
         setIsLoading(false);
         return;
       }
-      
-      // If not in cache or expired, fetch from API
-      const data = await getSettings();
-      setSettings(data);
-      
-      // Cache the settings for 30 minutes
-      setInCache(CACHE_KEYS.SETTINGS, data, 30);
-      
-      setIsLoading(false);
-    };
-
-    fetchSettings();
+    }
+    
+    // If not in cache, forceRefresh is true, or expired, fetch from API
+    const data = await getSettings();
+    setSettings(data);
+    
+    // Cache the settings for 10 minutes
+    setInCache(CACHE_KEYS.SETTINGS, data, 10);
+    
+    setIsLoading(false);
   }, []);
+
+  // Function to force a refresh of the settings
+  const refreshSettings = useCallback(() => {
+    return fetchSettings(true);
+  }, [fetchSettings]);
 
   const saveSettings = async (updatedSettings: SiteSettings): Promise<{ success: boolean; error?: string }> => {
     try {
@@ -54,7 +57,10 @@ export const useSettings = () => {
         setSettings(newSettings);
         
         // Update cache with new settings
-        setInCache(CACHE_KEYS.SETTINGS, newSettings, 30);
+        setInCache(CACHE_KEYS.SETTINGS, newSettings, 10);
+        
+        // Clear all caches after settings update to ensure fresh data
+        clearAllCache();
       }
       
       return result;
@@ -64,9 +70,14 @@ export const useSettings = () => {
     }
   };
 
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
   return {
     settings,
     isLoading,
-    saveSettings
+    saveSettings,
+    refreshSettings
   };
 };
