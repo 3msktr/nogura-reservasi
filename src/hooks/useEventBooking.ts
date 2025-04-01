@@ -52,7 +52,20 @@ export const useEventBooking = ({ eventId }: EventBookingProps) => {
     ? event?.sessions.find(session => session.id === selectedSession)
     : undefined;
 
+  // Check if the event is full (all sessions have 0 available seats)
+  const isEventFull = event && event.sessions.every(session => session.availableSeats === 0);
+
   const initiateReservation = () => {
+    if (!event) {
+      toast.error('Event details not available');
+      return;
+    }
+
+    if (isEventFull) {
+      toast.error('This event is fully booked');
+      return;
+    }
+
     if (!selectedSession || !selectedSessionData) {
       toast.error('Please select a session');
       return;
@@ -78,6 +91,12 @@ export const useEventBooking = ({ eventId }: EventBookingProps) => {
   }) => {
     if (!user || !event || !selectedSession) {
       toast.error('Missing required information');
+      return;
+    }
+
+    // Double check that the event isn't full
+    if (isEventFull) {
+      toast.error('This event is now fully booked');
       return;
     }
 
@@ -114,6 +133,7 @@ export const useEventBooking = ({ eventId }: EventBookingProps) => {
     seatCount,
     selectedSessionData,
     showConfirmationForm,
+    isEventFull,
     handleSessionChange,
     setSeatCount,
     initiateReservation,

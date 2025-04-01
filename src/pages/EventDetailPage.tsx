@@ -101,6 +101,9 @@ const EventDetailPage: React.FC = () => {
   const availableSeats = event.sessions.reduce((acc, session) => acc + session.availableSeats, 0) || 0;
   const isFull = availableSeats === 0;
   
+  // Force the display status to closed if full booked
+  const displayAsOpen = event.isOpen && !isFull;
+  
   return (
     <Layout>
       <div className="container py-12 md:py-20">
@@ -123,8 +126,8 @@ const EventDetailPage: React.FC = () => {
                       <span>Full Booked</span>
                     </div>
                   )}
-                  <div className={`px-3 py-1 rounded-full text-sm flex items-center ${event.isOpen ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {event.isOpen ? (
+                  <div className={`px-3 py-1 rounded-full text-sm flex items-center ${displayAsOpen ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    {displayAsOpen ? (
                       <>
                         <LockOpen className="h-4 w-4 mr-1" />
                         <span>Open for Booking</span>
@@ -180,7 +183,7 @@ const EventDetailPage: React.FC = () => {
                 </div>
               </div>
               
-              {event.isOpen ? (
+              {displayAsOpen ? (
                 <div className="mt-8">
                   {isFull ? (
                     <div className="mt-8 bg-orange-50 rounded-xl p-6">

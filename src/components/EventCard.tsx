@@ -15,6 +15,9 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
   const availableSeats = event.sessions.reduce((acc, session) => acc + session.availableSeats, 0);
   const isFull = availableSeats === 0;
   
+  // Force the display status to closed if full booked
+  const displayAsOpen = event.isOpen && !isFull;
+  
   return (
     <div className="bg-white rounded-xl shadow-subtle-lg border border-border overflow-hidden hover-lift animate-fade-in">
       <div className="p-6">
@@ -28,8 +31,8 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
                   <span>Full Booked</span>
                 </div>
               )}
-              <div className={`px-2 py-1 rounded-full text-xs flex items-center ${event.isOpen ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                {event.isOpen ? (
+              <div className={`px-2 py-1 rounded-full text-xs flex items-center ${displayAsOpen ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                {displayAsOpen ? (
                   <>
                     <LockOpen className="h-3 w-3 mr-1" />
                     <span>Open</span>
@@ -60,7 +63,7 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
             </div>
           </div>
           
-          {event.isOpen ? (
+          {displayAsOpen ? (
             <div className="mt-4">
               {isFull ? (
                 <Button variant="outline" className="w-full" disabled>
