@@ -8,9 +8,10 @@ import { toast } from 'sonner';
 
 interface EventBookingProps {
   eventId?: string;
+  isAdmin?: boolean;
 }
 
-export const useEventBooking = ({ eventId }: EventBookingProps) => {
+export const useEventBooking = ({ eventId, isAdmin = false }: EventBookingProps) => {
   const { user } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -81,6 +82,12 @@ export const useEventBooking = ({ eventId }: EventBookingProps) => {
       return;
     }
 
+    // Admin can book even if event is not open
+    if (!event.isOpen && !isAdmin) {
+      toast.error('This event is not open for reservations');
+      return;
+    }
+
     setShowConfirmationForm(true);
   };
 
@@ -110,7 +117,8 @@ export const useEventBooking = ({ eventId }: EventBookingProps) => {
           contactName: formData.contactName,
           phoneNumber: formData.phoneNumber,
           allergyNotes: formData.allergyNotes
-        }
+        },
+        isAdmin // Pass the admin override flag
       );
 
       toast.success('Reservation created successfully!');

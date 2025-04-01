@@ -77,7 +77,8 @@ export const createReservation = async (
     contactName: string;
     phoneNumber: string;
     allergyNotes?: string;
-  }
+  },
+  isAdminOverride: boolean = false
 ): Promise<boolean> => {
   try {
     const { data: user } = await supabase.auth.getUser();
@@ -106,6 +107,22 @@ export const createReservation = async (
     if (session.availableseats < numberOfSeats) {
       toast.error("Not enough seats available. Please try again.");
       return false;
+    }
+
+    // If not an admin override, check if the event is open
+    if (!isAdminOverride) {
+      const { data: event, error: eventError } = await supabase
+        .from("events")
+        .select("isopen")
+        .eq("id", eventId)
+        .single();
+        
+      if (eventError) throw eventError;
+      
+      if (!event.isopen) {
+        toast.error("This event is not open for reservations");
+        return false;
+      }
     }
 
     // Create the reservation with contact information

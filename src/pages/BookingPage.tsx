@@ -11,11 +11,13 @@ import { useEventBooking } from '@/hooks/useEventBooking';
 import { toast } from 'sonner';
 import { checkExistingReservation } from '@/services/reservationService';
 import { subscribeToSessionUpdates } from '@/services/eventService';
+import { useAuth } from '@/contexts/AuthContext';
 
 const BookingPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const [hasExistingReservation, setHasExistingReservation] = useState(false);
+  const { isAdmin } = useAuth();
   
   const {
     event,
@@ -30,11 +32,12 @@ const BookingPage: React.FC = () => {
     handleConfirmReservation,
     setShowConfirmationForm,
     setEvent
-  } = useEventBooking({ eventId });
+  } = useEventBooking({ eventId, isAdmin });
   
   useEffect(() => {
     if (event) {
-      if (!event.isOpen) {
+      // If admin, allow booking even if event is not open
+      if (!event.isOpen && !isAdmin) {
         toast.error("This event is not open for reservations");
         navigate(`/event/${event.id}`);
         return;
@@ -49,7 +52,7 @@ const BookingPage: React.FC = () => {
         navigate(`/event/${event.id}`);
       }
     }
-  }, [event, navigate]);
+  }, [event, navigate, isAdmin]);
 
   useEffect(() => {
     const checkReservation = async () => {
@@ -178,6 +181,7 @@ const BookingPage: React.FC = () => {
                       seatCount={seatCount}
                       isLoading={isLoading}
                       onReservation={initiateReservation}
+                      isAdmin={isAdmin}
                     />
                   </div>
                 </div>
