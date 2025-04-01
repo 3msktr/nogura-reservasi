@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Layout from '@/components/Layout';
-import { UserCog, Calendar, Users, Settings } from 'lucide-react';
+import { UserCog, Calendar, Users } from 'lucide-react';
 
 const AdminDashboard = () => {
   const { profile } = useAuth();
@@ -20,7 +20,7 @@ const AdminDashboard = () => {
           </p>
         </div>
         
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-lg font-medium">User Management</CardTitle>
@@ -65,23 +65,6 @@ const AdminDashboard = () => {
               <Link to="/admin/reservations">
                 <Button className="w-full">
                   View Reservations
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-lg font-medium">Site Settings</CardTitle>
-              <Settings className="h-5 w-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="mb-4">
-                Customize site appearance and content
-              </CardDescription>
-              <Link to="/admin/settings">
-                <Button className="w-full">
-                  Edit Settings
                 </Button>
               </Link>
             </CardContent>
