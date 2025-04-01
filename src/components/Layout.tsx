@@ -1,7 +1,7 @@
 
 import React from 'react';
 import Navbar from './Navbar';
-await connection();
+
 interface LayoutProps {
   children: React.ReactNode;
 }
