@@ -25,6 +25,8 @@ const ClearSiteDataButton: React.FC = () => {
         await Promise.all(cacheKeys.map(key => caches.delete(key)));
       }
 
+      // Note: We're not clearing cookies as requested
+
       // Show success toast
       toast.success("Data cleared successfully", {
         description: "Reloading page..."
