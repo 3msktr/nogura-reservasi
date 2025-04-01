@@ -23,10 +23,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
-import { Save, PlusCircle, MinusCircle } from 'lucide-react';
+import { Save, PlusCircle, MinusCircle, AlertCircle } from 'lucide-react';
 import { MessageTemplate } from '@/lib/types';
+import { useAuth } from '@/contexts/auth';
 
 const AdminMessageTemplates = () => {
+  const { isAdmin } = useAuth();
   const [template, setTemplate] = useState<MessageTemplate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [placeholders, setPlaceholders] = useState<string[]>([
@@ -62,24 +64,25 @@ const AdminMessageTemplates = () => {
         .from('message_templates')
         .select('*')
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) {
+        console.error('Supabase error:', error);
+        toast.error('Failed to load message template');
+        throw error;
+      }
+
+      if (!data) {
         // If no template exists, create one
-        if (error.code === 'PGRST116') {
-          const defaultTemplate = getDefaultTemplate();
-          await createDefaultTemplate(defaultTemplate);
-          // Set the new template
-          setTemplate({
-            id: 'new',
-            name: 'Default Confirmation Template',
-            content: defaultTemplate,
-            created_at: new Date().toISOString()
-          });
-        } else {
-          console.error('Supabase error:', error);
-          throw error;
-        }
+        const defaultTemplate = getDefaultTemplate();
+        await createDefaultTemplate(defaultTemplate);
+        // Set the new template
+        setTemplate({
+          id: 'new',
+          name: 'Default Confirmation Template',
+          content: defaultTemplate,
+          created_at: new Date().toISOString()
+        });
       } else {
         // Map the data to match our MessageTemplate type
         setTemplate({
@@ -117,6 +120,9 @@ const AdminMessageTemplates = () => {
 
   const handleSaveTemplate = async (values: { name: string; content: string }) => {
     try {
+      console.log('Saving template with values:', values);
+      console.log('Current template state:', template);
+      
       if (template?.id && template.id !== 'new') {
         // Update existing template
         const { error } = await supabase
@@ -127,7 +133,10 @@ const AdminMessageTemplates = () => {
           })
           .eq('id', template.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Update error:', error);
+          throw error;
+        }
         
         toast.success('Template updated successfully');
         
@@ -139,21 +148,38 @@ const AdminMessageTemplates = () => {
         });
       } else {
         // Create new template if somehow we don't have one
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('message_templates')
           .insert({
             name: values.name,
             content: values.content
-          });
+          })
+          .select()
+          .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
         
         toast.success('Template created successfully');
-        fetchTemplate();
+        
+        // Update local state with the new template data
+        if (data) {
+          setTemplate({
+            id: data.id,
+            name: data.name,
+            content: data.content,
+            created_at: data.created_at
+          });
+        } else {
+          // Refresh to get the latest data
+          fetchTemplate();
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving template:', error);
-      toast.error('Failed to save template');
+      toast.error(`Failed to save template: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -216,6 +242,26 @@ Please arrive 15 minutes before your scheduled time. We look forward to seeing y
 Best regards,
 The Event Team`;
   };
+
+  if (!isAdmin) {
+    return (
+      <Layout>
+        <div className="container py-20">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center justify-center text-center p-6">
+                <AlertCircle className="h-10 w-10 text-destructive mb-4" />
+                <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
+                <p className="text-muted-foreground">
+                  You need administrator privileges to access this page.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
