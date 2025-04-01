@@ -10,6 +10,7 @@ import ReservationConfirmationForm from '@/components/booking/ReservationConfirm
 import { useEventBooking } from '@/hooks/useEventBooking';
 import { toast } from 'sonner';
 import { checkExistingReservation } from '@/services/reservationService';
+import { subscribeToSessionUpdates } from '@/services/eventService';
 
 const BookingPage: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -27,13 +28,26 @@ const BookingPage: React.FC = () => {
     setSeatCount,
     initiateReservation,
     handleConfirmReservation,
-    setShowConfirmationForm
+    setShowConfirmationForm,
+    setEvent
   } = useEventBooking({ eventId });
   
   useEffect(() => {
-    if (event && !event.isOpen) {
-      toast.error("This event is not open for reservations");
-      navigate(`/event/${event.id}`);
+    if (event) {
+      if (!event.isOpen) {
+        toast.error("This event is not open for reservations");
+        navigate(`/event/${event.id}`);
+        return;
+      }
+      
+      const totalAvailableSeats = event.sessions.reduce(
+        (sum, session) => sum + session.availableSeats, 0
+      );
+      
+      if (totalAvailableSeats === 0) {
+        toast.error("This event is fully booked");
+        navigate(`/event/${event.id}`);
+      }
     }
   }, [event, navigate]);
 
@@ -47,6 +61,39 @@ const BookingPage: React.FC = () => {
     
     checkReservation();
   }, [eventId]);
+  
+  // Subscribe to real-time session updates
+  useEffect(() => {
+    if (!eventId) return;
+    
+    const unsubscribe = subscribeToSessionUpdates(eventId, (updatedSessions) => {
+      // Update the event with the latest session data
+      setEvent((currentEvent) => {
+        if (!currentEvent) return currentEvent;
+        
+        const updatedEvent = {
+          ...currentEvent,
+          sessions: updatedSessions
+        };
+        
+        // Check if event is fully booked now
+        const totalAvailableSeats = updatedSessions.reduce(
+          (sum, session) => sum + session.availableSeats, 0
+        );
+        
+        if (totalAvailableSeats === 0 && !showConfirmationForm) {
+          toast("This event is now fully booked");
+          navigate(`/event/${eventId}`);
+        }
+        
+        return updatedEvent;
+      });
+    });
+    
+    return () => {
+      unsubscribe();
+    };
+  }, [eventId, navigate, setEvent, showConfirmationForm]);
   
   if (!event) {
     return (

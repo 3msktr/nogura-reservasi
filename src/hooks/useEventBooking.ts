@@ -1,105 +1,122 @@
 
 import { useState, useEffect } from 'react';
 import { Event, Session } from '@/lib/types';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 import { getEventById } from '@/services/eventService';
 import { createReservation } from '@/services/reservationService';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
-interface UseEventBookingProps {
-  eventId: string | undefined;
+interface EventBookingProps {
+  eventId?: string;
 }
 
-interface ContactInfo {
-  contactName: string;
-  phoneNumber: string;
-  allergyNotes?: string;
-}
-
-export const useEventBooking = ({ eventId }: UseEventBookingProps) => {
-  const navigate = useNavigate();
-  
+export const useEventBooking = ({ eventId }: EventBookingProps) => {
+  const { user } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
-  const [selectedSession, setSelectedSession] = useState<string>('');
-  const [seatCount, setSeatCount] = useState<number>(1);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [showConfirmationForm, setShowConfirmationForm] = useState<boolean>(false);
-  
-  useEffect(() => {
-    const fetchEvent = async () => {
-      if (!eventId) {
-        toast.error("Event ID is missing");
-        navigate("/");
-        return;
-      }
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedSession, setSelectedSession] = useState<string | null>(null);
+  const [seatCount, setSeatCount] = useState(1);
+  const [showConfirmationForm, setShowConfirmationForm] = useState(false);
 
-      const eventData = await getEventById(eventId);
-      
-      if (eventData) {
-        setEvent(eventData);
-      } else {
-        toast.error("Event not found");
-        navigate("/");
+  useEffect(() => {
+    if (!eventId) return;
+
+    const fetchEvent = async () => {
+      setIsLoading(true);
+      try {
+        const eventData = await getEventById(eventId);
+        if (eventData) {
+          setEvent(eventData);
+          // Reset selection on new event
+          setSelectedSession(null);
+          setSeatCount(1);
+        }
+      } catch (error) {
+        console.error('Error fetching event:', error);
+        toast.error('Failed to load event details');
+      } finally {
+        setIsLoading(false);
       }
     };
-    
+
     fetchEvent();
-  }, [eventId, navigate]);
-  
+  }, [eventId]);
+
   const handleSessionChange = (sessionId: string) => {
     setSelectedSession(sessionId);
-    setSeatCount(1); // Reset seat count when changing session
+    // Reset seat count when changing sessions
+    setSeatCount(1);
   };
-  
-  const getSelectedSessionData = (): Session | undefined => {
-    return event?.sessions.find(session => session.id === selectedSession);
-  };
-  
+
+  const selectedSessionData = selectedSession
+    ? event?.sessions.find(session => session.id === selectedSession)
+    : undefined;
+
   const initiateReservation = () => {
-    if (!event || !selectedSession) {
-      toast.error("Please select a session");
+    if (!selectedSession || !selectedSessionData) {
+      toast.error('Please select a session');
       return;
     }
-    
-    // Show confirmation form instead of immediately creating reservation
+
+    if (seatCount < 1) {
+      toast.error('Please select at least one seat');
+      return;
+    }
+
+    if (seatCount > selectedSessionData.availableSeats) {
+      toast.error(`Only ${selectedSessionData.availableSeats} seats available`);
+      return;
+    }
+
     setShowConfirmationForm(true);
   };
-  
-  const handleConfirmReservation = async (contactInfo: ContactInfo) => {
-    if (!event || !selectedSession) {
-      toast.error("Please select a session");
+
+  const handleConfirmReservation = async (formData: {
+    contactName: string;
+    phoneNumber: string;
+    allergyNotes: string;
+  }) => {
+    if (!user || !event || !selectedSession) {
+      toast.error('Missing required information');
       return;
     }
-    
+
     setIsLoading(true);
-    
-    const success = await createReservation(
-      event.id,
-      selectedSession,
-      seatCount,
-      contactInfo
-    );
-    
-    setIsLoading(false);
-    
-    if (success) {
-      navigate("/my-reservations");
+    try {
+      await createReservation({
+        userId: user.id,
+        eventId: event.id,
+        sessionId: selectedSession,
+        numberOfSeats: seatCount,
+        contactName: formData.contactName,
+        phoneNumber: formData.phoneNumber,
+        allergyNotes: formData.allergyNotes
+      });
+
+      toast.success('Reservation created successfully!');
+      setShowConfirmationForm(false);
+      // Return to the event list or reservation list page
+      window.location.href = '/my-reservations';
+    } catch (error) {
+      console.error('Error creating reservation:', error);
+      toast.error('Failed to create reservation');
+    } finally {
+      setIsLoading(false);
     }
   };
-  
-  const selectedSessionData = getSelectedSessionData();
-  
+
   return {
     event,
+    setEvent,
+    isLoading,
     selectedSession,
     seatCount,
-    isLoading,
     selectedSessionData,
     showConfirmationForm,
     handleSessionChange,
     setSeatCount,
     initiateReservation,
     handleConfirmReservation,
-    setShowConfirmationForm,
+    setShowConfirmationForm
   };
 };
