@@ -1,11 +1,10 @@
+
 import React from 'react';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
+
 const ClearSiteDataButton: React.FC = () => {
-  const {
-    toast
-  } = useToast();
   const clearSiteData = async () => {
     try {
       // 1. Unregister service worker
@@ -20,14 +19,7 @@ const ClearSiteDataButton: React.FC = () => {
       localStorage.clear();
       sessionStorage.clear();
 
-      // 3. Clear cookies
-      document.cookie.split(';').forEach(cookie => {
-        const eqPos = cookie.indexOf('=');
-        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-      });
-
-      // 4. Clear cache storage
+      // 3. Clear cache storage
       if ('caches' in window) {
         const cacheKeys = await caches.keys();
         await Promise.all(cacheKeys.map(key => caches.delete(key)));
@@ -52,9 +44,13 @@ const ClearSiteDataButton: React.FC = () => {
       });
     }
   };
-  return <Button onClick={clearSiteData} variant="outline" className="flex items-center gap-2 text-right">
+
+  return (
+    <Button onClick={clearSiteData} variant="outline" className="flex items-center gap-2 text-right">
       <RefreshCw size={16} />
       <span className="text-right">Refresh</span>
-    </Button>;
+    </Button>
+  );
 };
+
 export default ClearSiteDataButton;
