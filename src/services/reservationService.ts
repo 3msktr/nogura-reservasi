@@ -43,8 +43,14 @@ export const getUserReservations = async (): Promise<Reservation[]> => {
 };
 
 // New function to check if a user already has an active reservation for this event
-export const checkExistingReservation = async (eventId: string): Promise<boolean> => {
+export const checkExistingReservation = async (eventId: string, isAdminOverride: boolean = false): Promise<boolean> => {
   try {
+    // If admin override is true, we skip the check and always return false (no existing reservation)
+    if (isAdminOverride) {
+      console.log("Admin override: skipping existing reservation check");
+      return false;
+    }
+    
     const { data: user } = await supabase.auth.getUser();
     
     if (!user.user) {
@@ -89,7 +95,8 @@ export const createReservation = async (
     }
 
     // Check if the user already has an active reservation for this event
-    const hasExistingReservation = await checkExistingReservation(eventId);
+    // Pass the isAdminOverride flag to the check function
+    const hasExistingReservation = await checkExistingReservation(eventId, isAdminOverride);
     if (hasExistingReservation) {
       toast.error("You already have a reservation for this event");
       return false;

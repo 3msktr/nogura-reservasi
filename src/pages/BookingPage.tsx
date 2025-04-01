@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -67,17 +66,16 @@ const BookingPage: React.FC = () => {
   useEffect(() => {
     const checkReservation = async () => {
       if (eventId) {
-        const exists = await checkExistingReservation(eventId);
+        // Pass the isAdmin flag to checkExistingReservation to bypass the check for admins
+        const exists = await checkExistingReservation(eventId, isAdmin);
         setHasExistingReservation(exists);
       }
     };
     
     checkReservation();
-  }, [eventId]);
+  }, [eventId, isAdmin]);
   
   useEffect(() => {
-    if (!eventId) return;
-    
     const unsubscribe = subscribeToSessionUpdates(eventId, (updatedSessions) => {
       // Update the event with the latest session data
       setEvent((currentEvent) => {
@@ -130,7 +128,7 @@ const BookingPage: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           <EventDetails event={event} onBack={() => navigate("/")} />
           
-          {hasExistingReservation ? (
+          {hasExistingReservation && !isAdmin ? (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 my-8 text-center">
               <h3 className="text-lg font-medium text-amber-800 mb-2">You already have a reservation for this event</h3>
               <p className="text-amber-700 mb-4">Each user can only book once per event.</p>
