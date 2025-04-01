@@ -95,7 +95,7 @@ export const clearAllCache = (): void => {
       if (typeof cacheKey === 'string') {
         // If it's a simple key, remove it directly
         localStorage.removeItem(cacheKey);
-      } else if (cacheKey.endsWith('_')) {
+      } else if (typeof cacheKey === 'string' && cacheKey.endsWith('_')) {
         // If it's a prefix key, use invalidateCacheByPrefix
         invalidateCacheByPrefix(cacheKey);
       }
