@@ -37,7 +37,7 @@ const Index: React.FC = () => {
       <section className="bg-secondary py-20 px-4">
         <div className="container max-w-7xl mx-auto">
           <div className="text-center mb-12 animate-fade-in">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Cara Reservasi</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Our unique war ticket reservation system ensures everyone has a fair chance to secure their seats.
             </p>
@@ -47,19 +47,19 @@ const Index: React.FC = () => {
             <div className="bg-background p-8 rounded-xl shadow-subtle flex flex-col items-center text-center animate-slide-up delay-100">
               <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mb-4 text-lg font-medium">1</div>
               <h3 className="text-xl font-semibold mb-2">Lihat Jam</h3>
-              <p className="text-muted-foreground">Reservasi akan dibuka setiap H-1 mulai jam 09:00 pagi.</p>
+              <p className="text-muted-foreground">Reservasi akan dibuka setiap H-1 mulai jam 09:00 pagi. Klik "Book Now" ketika reservasi sudah dibuka</p>
             </div>
             
             <div className="bg-background p-8 rounded-xl shadow-subtle flex flex-col items-center text-center animate-slide-up delay-200">
               <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mb-4 text-lg font-medium">2</div>
               <h3 className="text-xl font-semibold mb-2">Pilih Sesi/Jam</h3>
-              <p className="text-muted-foreground">Choose your preferred time slot from the available sessions.</p>
+              <p className="text-muted-foreground">Pilih Sesi/Jam yang diinginkan lalu isi seluruh data yang dibutuhkan secara cepat</p>
             </div>
             
             <div className="bg-background p-8 rounded-xl shadow-subtle flex flex-col items-center text-center animate-slide-up delay-300">
               <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mb-4 text-lg font-medium">3</div>
               <h3 className="text-xl font-semibold mb-2">Reservasi Berhasil</h3>
-              <p className="text-muted-foreground">Reservasi yang berhasil akan ditampilkan pada menu My Reservations dan akan dikirimkan pesan Whatsapp</p>
+              <p className="text-muted-foreground">Reservasi telah berhasil dan cek halaman My Reservations</p>
             </div>
           </div>
         </div>
