@@ -18,7 +18,7 @@ const Index: React.FC = () => {
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">Halal Artisan Ramen</p>
           </div>
           
-          <div className="flex justify-center mb-3">
+          <div className="flex justify-right mb-3">
             <ClearSiteDataButton />
           </div>
           
